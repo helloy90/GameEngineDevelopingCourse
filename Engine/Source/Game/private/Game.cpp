@@ -8,7 +8,7 @@ namespace GameEngine
 		PlatformLoop(PlatformLoopFunc)
 	{
 		m_renderEngine = std::make_unique<Render::RenderEngine>();
-		
+
 		ProcessSystemParams();
 	}
 

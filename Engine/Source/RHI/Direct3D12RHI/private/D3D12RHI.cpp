@@ -71,6 +71,32 @@ namespace GameEngine
 			return m_d3d12Private->CreateMesh(vertices.begin(), vertices.size(), sizeof(Vertex), indices.begin(), indices.size(), sizeof(uint16_t));
 		}
 
+		Mesh::Ptr D3D12RHI::CreatePyramidMesh()
+		{
+			array<Vertex, 5> vertices =
+			{
+				Vertex({ Math::Vector3f(0.0f, -1.0f, 0.0f), Math::Vector4f((float*)&DirectX::Colors::White) }),
+				Vertex({ Math::Vector3f(+1.0f, +1.0f, +1.0f), Math::Vector4f((float*)&DirectX::Colors::Black) }),
+				Vertex({ Math::Vector3f(-1.0f, +1.0f, +1.0f), Math::Vector4f((float*)&DirectX::Colors::Red) }),
+				Vertex({ Math::Vector3f(-1.0f, +1.0f, -1.0f), Math::Vector4f((float*)&DirectX::Colors::Green) }),
+				Vertex({ Math::Vector3f(+1.0f, +1.0f, -1.0f), Math::Vector4f((float*)&DirectX::Colors::Blue) }),
+			};
+
+			array<uint16_t, 18> indices =
+			{
+				0, 4, 1,
+				0, 1, 2,
+				0, 2, 3,
+				0, 3, 4,
+	
+				1, 4, 3,
+				3, 2, 1
+			};
+
+			return m_d3d12Private->CreateMesh(vertices.begin(), vertices.size(), sizeof(Vertex), indices.begin(), indices.size(), sizeof(uint16_t));
+
+		}
+
 		Material::Ptr D3D12RHI::GetMaterial(const std::string& name)
 		{
 			return m_d3d12Private->GetMaterial(name);
