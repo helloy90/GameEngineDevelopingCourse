@@ -58,6 +58,15 @@ namespace GameEngine::Core
 				return result;
 			}
 
+			inline Vector3<T> operator+(Vector3<T> other)
+			{
+				Vector3<T> result;
+				result.x = x + other.x;
+				result.y = y + other.y;
+				result.z = z + other.z;
+				return result;
+			}
+
 			inline Vector3<T> operator-()
 			{
 				Vector3<T> result;
@@ -115,6 +124,16 @@ namespace GameEngine::Core
 				result.y = y - other.y;
 				result.z = z - other.z;
 				result.w = w - other.w;
+				return result;
+			}
+
+			inline Vector4<T> operator+(Vector4<T> other)
+			{
+				Vector4<T> result;
+				result.x = x + other.x;
+				result.y = y + other.y;
+				result.z = z + other.z;
+				result.w = w + other.w;
 				return result;
 			}
 

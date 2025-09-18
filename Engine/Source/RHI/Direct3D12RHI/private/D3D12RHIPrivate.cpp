@@ -35,7 +35,7 @@ namespace GameEngine
 			msQualityLevels.SampleCount = 4;
 			msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 			msQualityLevels.NumQualityLevels = 0;
-			
+
 			HRESULT hr = m_Device->CheckFeatureSupport(
 				D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 				&msQualityLevels,
@@ -255,7 +255,6 @@ namespace GameEngine
 			D3D12Mesh d3d12Mesh = *reinterpret_cast<D3D12Mesh*>(mesh.get());
 			D3D12Material d3d12Material = *reinterpret_cast<D3D12Material*>(material.get());
 
-
 			float mTheta = 1.3f * DirectX::XM_PI;
 			float mPhi = 1.2f * DirectX::XM_PIDIV4;
 			float mRadius = 5.0f;
@@ -272,9 +271,41 @@ namespace GameEngine
 
 			// Projection and view matrices should be a part of Camera class
 			Math::Matrix4x4f view = Core::Math::ViewMatrixLH(pos, target, up);
-			Math::Matrix4x4f proj = Core::Math::ProjectionMatrixLH(0.25f * DirectX::XM_PI, Core::MainWindowsApplication->GetAspectRatio(), 1.0f, 1000.0f);
+			Math::Matrix4x4f proj = Core::Math::ProjectionMatrixLH(0.25f * DirectX::XM_PI, Core::MainWindowsApplication->GetAspectRatio(), 0.1f, 1000.0f);
 
 			Math::Matrix4x4f world = Math::Matrix4x4f::Identity();
+
+			// should be in Core
+			std::chrono::steady_clock::duration time = std::chrono::steady_clock::now().time_since_epoch();
+			uint64_t timeInMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(time).count();
+			float currentTime = static_cast<float>(timeInMicroseconds) / static_cast<float>(std::micro().den);
+
+			// should be its own function
+			Math::Vector3f circlePosition = Math::Vector3f(0.0f, 0.0f, 0.0f);
+			float radius = 1.0f;
+			float movementSpeed = 0.5f;
+			float rotationSpeed = 1.5f;
+			float angle = DirectX::XM_PI * currentTime;
+
+			Math::Vector3f offset = Math::Vector3f(
+				std::cos(angle * movementSpeed) * radius,
+				0.0f,
+				std::sin(angle * movementSpeed) * radius);
+
+			Math::Vector3f finalPosition = circlePosition + offset;
+
+			// should be its own function
+			//rotation along y axis
+			world.SetElement(std::cos(angle * rotationSpeed), 0, 0);
+			world.SetElement(std::sin(angle * rotationSpeed), 0, 2);
+			world.SetElement(-std::sin(angle * rotationSpeed), 2, 0);
+			world.SetElement(std::cos(angle * rotationSpeed), 2, 2);
+
+			//translation
+			world.SetElement(finalPosition.x, 3, 0);
+			world.SetElement(finalPosition.z, 3, 2);
+			//world.SetElement(0, 2, 3);
+
 			Math::Matrix4x4f worldViewProj = world * view * proj;
 
 			ObjectConstants objConstants;
