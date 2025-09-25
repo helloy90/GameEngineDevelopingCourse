@@ -2,6 +2,8 @@
 
 #include <Core/export.h>
 #include <Vector.h>
+#include <INIReader.h>
+#include <optional>
 
 namespace GameEngine::Core
 {
@@ -19,6 +21,7 @@ namespace GameEngine::Core
 		void Resize(uint32_t newWidth, uint32_t newHeight) { m_Width = newWidth; m_Height = newHeight; }
 		float GetAspectRatio() const { return (float)m_Width / (float)m_Height; }
 		Math::Vector2i GetMousePos() const { return m_MousePos; }
+		INIReader& GetConfigReader() { return m_configReader.value(); }
 		void SetMousePos(int x, int y) { m_MousePos.x = x; m_MousePos.y = y; }
 
 	private:
@@ -28,6 +31,9 @@ namespace GameEngine::Core
 		void* m_WndHndl = nullptr;
 
 		Math::Vector2i m_MousePos;
+
+		// optional for late initialization
+		std::optional<INIReader> m_configReader;
 	};
 
 	extern CORE_API Window* g_MainWindowsApplication;
