@@ -4,6 +4,8 @@
 #include <GameObject.h>
 #include <Input/InputHandler.h>
 
+#include <random>
+
 namespace GameEngine
 {
 	Game::Game(
@@ -17,18 +19,39 @@ namespace GameEngine
 
 		m_renderThread = std::make_unique<Render::RenderThread>();
 
+		std::random_device device;
+		std::mt19937 generator(device());
+		std::uniform_int_distribution<> distribution(0, 2);
+
+		int objectsAmount = 100;
+		int objectsAmountSqrt = static_cast<int>(std::round(std::sqrt(objectsAmount)));
+		int spacing = 5;
+
 		// How many objects do we want to create
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < objectsAmount; ++i)
 		{
-			m_Objects.push_back(new GameObject());
+			GameObject::ControllerType controllerType = static_cast<GameObject::ControllerType>(distribution(generator));
+
+			m_Objects.push_back(new GameObject(controllerType));
 			Render::RenderObject** renderObject = m_Objects.back()->GetRenderObjectRef();
 			m_renderThread->EnqueueCommand(Render::ERC::CreateRenderObject, RenderCore::DefaultGeometry::Cube(), renderObject);
+		}
+
+		for (int i = 0; i < objectsAmount; i++) {
+			m_Objects[i]->SetPosition(
+				Math::Vector3f((i / objectsAmountSqrt) * spacing, 0, (i % objectsAmountSqrt) * spacing),
+				m_renderThread->GetMainFrame()
+			);
 		}
 
 		Core::g_InputHandler->RegisterCallback("GoForward", [&]() { Core::g_MainCamera->Move(Core::g_MainCamera->GetViewDir()); });
 		Core::g_InputHandler->RegisterCallback("GoBack", [&]() { Core::g_MainCamera->Move(-Core::g_MainCamera->GetViewDir()); });
 		Core::g_InputHandler->RegisterCallback("GoRight", [&]() { Core::g_MainCamera->Move(Core::g_MainCamera->GetRightDir()); });
 		Core::g_InputHandler->RegisterCallback("GoLeft", [&]() { Core::g_MainCamera->Move(-Core::g_MainCamera->GetRightDir()); });
+
+		Core::g_InputHandler->RegisterCallback("MoveBlocksLeft", [&]() { keyDirection = Math::Vector3f(-1, 0, 0); });
+		Core::g_InputHandler->RegisterCallback("MoveBlocksRight", [&]() { keyDirection = Math::Vector3f(1, 0, 0); });
+		Core::g_InputHandler->RegisterCallback("StopBlocks", [&]() { keyDirection = Math::Vector3f(0, 0, 0); });
 	}
 
 	void Game::Run()
@@ -60,23 +83,7 @@ namespace GameEngine
 	{
 		for (int i = 0; i < m_Objects.size(); ++i)
 		{
-			Math::Vector3f pos = m_Objects[i]->GetPosition();
-
-			// Showcase
-			if (i == 0)
-			{
-				pos.x += 0.5f * dt;
-			}
-			else if (i == 1)
-			{
-				pos.y -= 0.5f * dt;
-			}
-			else if (i == 2)
-			{
-				pos.x += 0.5f * dt;
-				pos.y -= 0.5f * dt;
-			}
-			m_Objects[i]->SetPosition(pos, m_renderThread->GetMainFrame());
+			m_Objects[i]->Move(dt, keyDirection, m_renderThread->GetMainFrame());
 		}
 	}
 }
