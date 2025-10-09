@@ -10,7 +10,7 @@ namespace GameEngine
 	{
 		namespace DefaultGeometry
 		{
-			Geometry::Ptr Cube()
+			inline Geometry::Ptr Cube()
 			{
 				constexpr Core::array<Geometry::VertexType, 8> vertices =
 				{
