@@ -2,52 +2,72 @@ local ecs = require "ecs"
 
 local function rand_flt(from, to)
 	local maxNumber = 32767
-    return from + (math.random(maxNumber) / maxNumber) * (to - from)
+	return from + (math.random(maxNumber) / maxNumber) * (to - from)
+end
+
+local function removeEntity(ent)
+	ecs.remove(ent, ecs.lookup("Velocity"))
+	ecs.remove(ent, ecs.lookup("BouncePlane"))
+	ecs.remove(ent, ecs.lookup("Bounciness"))
+	ecs.remove(ent, ecs.lookup("FrictionAmount"))
+	ecs.remove(ent, ecs.lookup("Velocity"))
+	ecs.remove(ent, ecs.lookup("DestructTimer"))
+end
+
+local function near(projPos, objPos, value)
+	distVecX = projPos.x - objPos.x
+	distVecY = projPos.y - objPos.y
+	distVecZ = projPos.z - objPos.z
+
+	distLength = math.sqrt(distVecX ^ 2 + distVecY ^ 2 + distVecZ ^ 2)
+	return (distLength <= value)
 end
 
 local function move(it)
-    for pos, vel, ent in ecs.each(it) do
-        pos.x = pos.x + vel.x * it.delta_time
-        pos.y = pos.y + vel.y * it.delta_time
+	for pos, vel, ent in ecs.each(it) do
+		pos.x = pos.x + vel.x * it.delta_time
+		pos.y = pos.y + vel.y * it.delta_time
 		pos.z = pos.z + vel.z * it.delta_time
-    end
+	end
 end
 
 local function gravity(it)
-    for pos, vel, grav, plane, ent in ecs.each(it) do
-        local planeEpsilon = 0.1
-		
+	for pos, vel, grav, plane, ent in ecs.each(it) do
+		local planeEpsilon = 0.1
+
 		if plane.x * pos.x + plane.y * pos.y + plane.z * pos.z < plane.w + planeEpsilon then
-			do return end
+			do
+				return
+			end
 		end
-		
+
 		vel.x = vel.x + grav.x * it.delta_time
-        vel.y = vel.y + grav.y * it.delta_time
+		vel.y = vel.y + grav.y * it.delta_time
 		vel.z = vel.z + grav.z * it.delta_time
-    end
+	end
 end
 
 local function FrictionSystem(it)
-    for vel, friction, ent in ecs.each(it) do
-        vel.x = vel.x - vel.x * friction.value * it.delta_time
+	for vel, friction, ent in ecs.each(it) do
+		vel.x = vel.x - vel.x * friction.value * it.delta_time
 		vel.y = vel.y - vel.y * friction.value * it.delta_time
 		vel.z = vel.z - vel.z * friction.value * it.delta_time
-    end
+	end
 end
 
 local function ShiverSystem(it)
-    for pos, shiver, ent in ecs.each(it) do
-        pos.x = pos.x + rand_flt(-shiver.value, shiver.value)
+	for pos, shiver, ent in ecs.each(it) do
+		pos.x = pos.x + rand_flt(-shiver.value, shiver.value)
 		pos.y = pos.y + rand_flt(-shiver.value, shiver.value)
 		pos.z = pos.z + rand_flt(-shiver.value, shiver.value)
-    end
+	end
 end
 
 local function BounceSystem(it)
-    for pos, vel, plane, bounciness, ent in ecs.each(it) do
-        local dotPos = plane.x * pos.x + plane.y * pos.y + plane.z * pos.z
+	for pos, vel, plane, bounciness, ent in ecs.each(it) do
+		local dotPos = plane.x * pos.x + plane.y * pos.y + plane.z * pos.z
 		local dotVel = plane.x * vel.x + plane.y * vel.y + plane.z * vel.z
-		
+
 		if dotPos < plane.w then
 			pos.x = pos.x - (dotPos - plane.w) * plane.x
 			pos.y = pos.y - (dotPos - plane.w) * plane.y
@@ -57,7 +77,37 @@ local function BounceSystem(it)
 			vel.y = vel.y - (1.0 + bounciness.value) * plane.y * dotVel
 			vel.z = vel.z - (1.0 + bounciness.value) * plane.z * dotVel
 		end
-    end
+	end
+end
+
+local function DestructSystem(it)
+	for pos, timer, ent in ecs.each(it) do
+		timer.value = timer.value - it.delta_time
+		if timer.value <= 0.0 then
+			pos.x = 3000.0
+			pos.y = -3000.0
+			pos.z = 3000.0
+			removeEntity(ent)
+		end
+	end
+end
+
+local interactQuery = ecs.query("Position, Velocity, ObjectCollider")
+
+local function InteractSystem(it)
+	for projPos, projVelocity, proj, projCollider in ecs.each(it) do
+		for objPos, objVelocity, objCollider in ecs.each(interactQuery) do
+			if near(projPos, objPos, 1.5) then
+				objVelocity.x = projVelocity.x * 0.8
+				objVelocity.y = projVelocity.y * 0.8
+				objVelocity.z = projVelocity.z * 0.8
+
+				projVelocity.x = -projVelocity.x * 0.3
+				projVelocity.y = -projVelocity.y * 0.3
+				projVelocity.z = -projVelocity.z * 0.3
+			end
+		end
+	end
 end
 
 ecs.system(move, "Move", ecs.OnUpdate, "Position, Velocity")
@@ -65,4 +115,5 @@ ecs.system(gravity, "grav", ecs.OnUpdate, "Position, Velocity, Gravity, BouncePl
 ecs.system(FrictionSystem, "FrictionSystem", ecs.OnUpdate, "Velocity, FrictionAmount")
 ecs.system(ShiverSystem, "ShiverSystem", ecs.OnUpdate, "Position, ShiverAmount")
 ecs.system(BounceSystem, "BounceSystem", ecs.OnUpdate, "Position, Velocity, BouncePlane, Bounciness")
-
+ecs.system(DestructSystem, "DestructSystem", ecs.OnUpdate, "Position, DestructTimer")
+ecs.system(InteractSystem, "InteractSystem", ecs.OnUpdate, "Position, Velocity, Projectile, ProjectileCollider")
