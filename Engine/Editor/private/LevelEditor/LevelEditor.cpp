@@ -9,6 +9,8 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 
+#include <format>
+
 namespace GameEngine
 {
 	namespace Editor
@@ -16,6 +18,8 @@ namespace GameEngine
 		LevelEditor::LevelEditor(flecs::world& world)
 		{
 			m_Level = LevelSerializer::Deserialize(Core::g_FileSystem->GetFilePath("Levels/Main.xml").generic_string());
+
+			m_Level->GetLevelObjects().reserve(32);
 
 			for (World::LevelObject& levelObject : m_Level->GetLevelObjects())
 			{
@@ -55,6 +59,8 @@ namespace GameEngine
 			}
 
 			EntitySystem::LevelEditorECS::RegisterLevelEditorEcsSystems(world);
+
+			flecsWorld = &world;
 		}
 
 		void LevelEditor::Draw()
@@ -69,7 +75,26 @@ namespace GameEngine
 					{
 						for (World::LevelObject::Component& component : levelObject.GetComponents())
 						{
-							ImGui::InputText(component.first.c_str(), &component.second);
+							if (component.first == "Position") {
+								float pos[3] = {};
+								const char* compValue = component.second.c_str();
+								char* end;
+								float f = std::strtof(compValue, &end);
+								pos[0] = f;
+								compValue = end + 1;
+								f = std::strtof(compValue, &end);
+								pos[1] = f;
+								compValue = end + 1;
+								f = std::strtof(compValue, &end);
+								pos[2] = f;
+
+								if (ImGui::InputFloat3("Position", pos)) {
+									component.second = std::format("{},{},{}", pos[0], pos[1], pos[2]);
+								}
+							}
+							else {
+								ImGui::InputText(component.first.c_str(), &component.second);
+							}
 						}
 
 						ImGui::TreePop();
@@ -83,6 +108,11 @@ namespace GameEngine
 				m_SaveButtonPressed = true;
 
 				Save();
+			}
+
+			if (ImGui::Button("New Object"))
+			{
+				SpawnDefault();
 			}
 
 			if (m_SaveButtonPressed)
@@ -108,6 +138,51 @@ namespace GameEngine
 		{
 			assert(m_Level.has_value());
 			LevelSerializer::Serialize(Core::g_FileSystem->GetFilePath("Levels/Main.xml").generic_string(), m_Level.value());
+		}
+
+		void LevelEditor::SpawnDefault() {
+			assert(m_Level.has_value());
+
+			static std::size_t objects = m_Level->GetLevelObjects().size();
+
+			World::LevelObject newObject;
+			std::string newObjectName = std::format("newObject{}", objects);
+			newObject.SetName(newObjectName.c_str());
+
+			newObject.AddComponent("Position", "0.0,0.0,0.0");
+			newObject.AddComponent("Velocity", "0.0,0.0,0.0");
+			newObject.AddComponent("Gravity", "0.0,-9.8,0.0");
+			newObject.AddComponent("BouncePlane", "0.0,1.0,0.0,5.0");
+			newObject.AddComponent("Bounciness", "1.0");
+			newObject.AddComponent("GeometryPtr", "Cube");
+
+			m_Level->AddLevelObject(newObject);
+
+			World::Level::LevelObjectList& objectList = m_Level->GetLevelObjects();
+
+			World::LevelObject& objectIter = objectList.back();
+
+			World::LevelObject::ComponentList& list = objectIter.GetComponents();
+
+			World::LevelObject::ComponentList::iterator positionAttribute = std::ranges::find_if(list,
+				[](World::LevelObject::Component& component)
+				{
+					return !std::strcmp(component.first.c_str(), "Position");
+				}
+			);
+
+			assert(positionAttribute != list.end());
+
+			flecs::entity entity = flecsWorld->entity(objectIter.GetName().c_str())
+				.set(EntitySystem::LevelEditorECS::PositionDesc{ &positionAttribute->second })
+				.set(EntitySystem::EditorECS::Position{ 0.0f, 0.0f, 0.0f })
+				.set(GeometryPtr{
+						reinterpret_cast<RenderCore::Geometry*>(
+							World::WorldParser::GetCustomComponents()["Cube"]
+							)
+					});
+
+			objects++;
 		}
 	}
 }
