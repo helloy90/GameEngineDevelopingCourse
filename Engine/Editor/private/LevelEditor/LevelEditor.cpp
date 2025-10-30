@@ -19,7 +19,7 @@ namespace GameEngine
 		{
 			m_Level = LevelSerializer::Deserialize(Core::g_FileSystem->GetFilePath("Levels/Main.xml").generic_string());
 
-			m_Level->GetLevelObjects().reserve(32);
+			m_Level->GetLevelObjects().reserve(128);
 
 			for (World::LevelObject& levelObject : m_Level->GetLevelObjects())
 			{
