@@ -10,6 +10,8 @@ file(GLOB
 )
 
 if (WINDOWS)
+	find_package(Vulkan 1.4.300 REQUIRED)
+
 	file(GLOB
 		PLATFORM_PUBLIC_FILES
 		public/Platforms/Windows/*.h
@@ -24,12 +26,15 @@ if (WINDOWS)
 	file(GLOB
 		RENDER_BACKENDS_PUBLIC_FILES
 		public/RenderBackends/D3D12/*.h
+		public/RenderBackends/Vulkan/*.h
 	)
 
 	file(GLOB
 		RENDER_BACKENDS_PRIVATE_FILES
 		private/RenderBackends/D3D12/*.cpp
 		private/RenderBackends/D3D12/*.h
+		private/RenderBackends/Vulkan/*.cpp
+		private/RenderBackends/Vulkan/*.h
 	)
 	
 	find_library(IMGUI_DEBUG NAMES imgui
@@ -82,9 +87,11 @@ if (WINDOWS)
 	target_include_directories(GUI 
 		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/Platforms/Windows
 		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/RenderBackends/D3D12
+		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/RenderBackends/Vulkan
 		
 		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/Platforms/Windows
 		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/RenderBackends/D3D12
+		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/RenderBackends/Vulkan
 		
 		PRIVATE ${CMAKE_LIBRARY_PATH}/Direct3DHeaders/include/directx
 	)
@@ -95,6 +102,16 @@ if (WINDOWS)
 		d3dcompiler.lib
 		D3D12.lib
 		dxgi.lib
+
+		VulkanRHI
+		Vulkan::Vulkan
+	)
+
+	target_compile_definitions(GUI PUBLIC
+		VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+		VULKAN_HPP_STORAGE_SHARED
+		VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+		VULKAN_HPP_NO_EXCEPTIONS
 	)
 endif()
 

@@ -17,6 +17,7 @@ namespace GameEngine::Core
 		void Init(void* instance);
 
 		void* GetWindowHandle() const { return m_WndHndl; }
+		void* GetInstanceHandle() const { return m_InsHndl; }
 
 		uint32_t GetWidth() const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
@@ -42,6 +43,7 @@ namespace GameEngine::Core
 		uint32_t m_Height = 600;
 
 		void* m_WndHndl = nullptr;
+		void* m_InsHndl = nullptr;
 
 		// In screen coords
 		Math::Vector2i m_MousePos;
