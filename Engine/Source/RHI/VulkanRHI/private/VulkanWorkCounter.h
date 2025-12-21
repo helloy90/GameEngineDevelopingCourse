@@ -19,16 +19,19 @@ namespace GameEngine
 			}
 
 		public:
-			std::size_t currentIndex() const {
+			std::size_t CurrentIndex() const 
+			{
 				return m_CurrentIndex;
 			}
 
-			std::size_t multiBifferingCount() const {
+			std::size_t MultiBufferingCount() const 
+			{
 				return m_InflightFrames;
 			}
 
 		private:
-			void submit() {
+			void Submit() 
+			{
 				m_CurrentIndex = (m_CurrentIndex + 1) % m_InflightFrames;
 			}
 

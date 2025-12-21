@@ -1,8 +1,8 @@
-#include "VulkanRHIFence.h"
+#include <VulkanRHIFence.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
-#include "VulkanRHICommandQueue.h"
+#include <VulkanRHICommandQueue.h>
 
 namespace GameEngine
 {
@@ -12,9 +12,9 @@ namespace GameEngine
 			const VulkanWorkCounter& workCounter, VulkanRHIDevice::Ptr device)
 			: m_WorkCounter(workCounter)
 		{
-			m_Fences.reserve(workCounter.multiBifferingCount());
+			m_Fences.reserve(workCounter.MultiBufferingCount());
 
-			for (std::size_t i = 0; i < workCounter.multiBifferingCount(); i++)
+			for (std::size_t i = 0; i < workCounter.MultiBufferingCount(); i++)
 			{
 				m_Fences.emplace_back(
 					VulkanUtil::GetCheckedVkValue(device->GetDevice().createFenceUnique(vk::FenceCreateInfo{})));
@@ -27,11 +27,11 @@ namespace GameEngine
 
 		RenderNativeObject VulkanRHIFence::GetNativeObject()
 		{
-			return RenderNativeObject(&m_Fences[m_WorkCounter.currentIndex()].get());
+			return RenderNativeObject(&m_Fences[m_WorkCounter.CurrentIndex()].get());
 		}
 
 		vk::Fence VulkanRHIFence::GetFence() const {
-			return m_Fences[m_WorkCounter.currentIndex()].get();
+			return m_Fences[m_WorkCounter.CurrentIndex()].get();
 		}
 	}
 }

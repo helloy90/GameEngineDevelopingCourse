@@ -1,6 +1,6 @@
-#include "VulkanRHIBuffer.h"
+#include <VulkanRHIBuffer.h>
 
-#include "VulkanRHICore.h"
+#include <VulkanRHICore.h>
 
 namespace GameEngine
 {
@@ -19,7 +19,8 @@ namespace GameEngine
 				m_Description.ElementSize = (m_Description.ElementSize + 255) & ~255;
 			}
 
-			vk::BufferCreateInfo bufInfo = {
+			vk::BufferCreateInfo bufInfo = 
+			{
 				.size = GetBufferSize(desc),
 				.usage = (additionalUsage & vk::BufferUsageFlagBits::eVertexBuffer)
 					? additionalUsage
@@ -29,7 +30,8 @@ namespace GameEngine
 				.sharingMode = vk::SharingMode::eExclusive
 			};
 
-			VmaAllocationCreateInfo allocInfo = {
+			VmaAllocationCreateInfo allocInfo = 
+			{
 				.flags = (desc.UsageFlag != RHIBuffer::UsageFlag::GpuReadOnly)
 					?	VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT 
 					: VmaAllocationCreateFlags(0),

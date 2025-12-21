@@ -27,7 +27,7 @@ namespace GameEngine
 			static void NewFrame();
 
 		private:
-			static std::optional<vk::DescriptorPool> m_DescriptorPool;
+			static std::unique_ptr<vk::DescriptorPool> m_DescriptorPool;
 		};
 	}
 }

@@ -1,15 +1,15 @@
-#include "VulkanRHIFactory.h"
+#include <VulkanRHIFactory.h>
 
 #include <Debug/Console.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		static vk::Bool32 debugCallback(
+		static vk::Bool32 DebugCallback(
 			vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			vk::DebugUtilsMessageTypeFlagsEXT /*messageTypes*/,
 			const vk::DebugUtilsMessengerCallbackDataEXT* callbackData,
@@ -37,11 +37,12 @@ namespace GameEngine
 			return vk::False;
 		}
 
-		static vk::UniqueInstance createInstance(
+		static vk::UniqueInstance CreateInstance(
 			const std::vector<const char*> layers,
 			const std::vector<const char*> instanceExtensions)
 		{
-			constexpr vk::ApplicationInfo appInfo{
+			constexpr vk::ApplicationInfo appInfo = 
+			{
 				.pApplicationName = "Game",
 				.applicationVersion = VK_MAKE_VERSION(0, 1, 0),
 				.pEngineName = "Engine",
@@ -49,7 +50,8 @@ namespace GameEngine
 				.apiVersion = vk::ApiVersion14
 			};
 
-			vk::InstanceCreateInfo createInfo{
+			vk::InstanceCreateInfo createInfo = 
+			{
 				.pApplicationInfo = &appInfo
 			};
 
@@ -63,12 +65,14 @@ namespace GameEngine
 		{
 			VULKAN_HPP_DEFAULT_DISPATCHER.init();
 
-			std::vector<const char*> layers = {
+			std::vector<const char*> layers = 
+			{
 				"VK_LAYER_KHRONOS_validation"
 			};
 
 
-			std::vector<const char*> instanceExtensions = {
+			std::vector<const char*> instanceExtensions = 
+			{
 #if defined(_WIN32) || defined(_WIN64)
 				vk::KHRWin32SurfaceExtensionName,
 #endif
@@ -76,13 +80,14 @@ namespace GameEngine
 				vk::EXTDebugUtilsExtensionName
 			};
 
-			m_NativeInstance = createInstance(layers, instanceExtensions);
+			m_NativeInstance = CreateInstance(layers, instanceExtensions);
 
 			VULKAN_HPP_DEFAULT_DISPATCHER.init(m_NativeInstance.get());
 
 #ifdef DEBUG
 			{
-				vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo{
+				vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo = 
+				{
 					.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eError |
 						vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
 						vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
@@ -90,7 +95,7 @@ namespace GameEngine
 					.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
 						vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
 						vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-					.pfnUserCallback = debugCallback,
+					.pfnUserCallback = DebugCallback,
 					.pUserData = nullptr
 				};
 

@@ -4,31 +4,31 @@
 #include <RenderCore.h>
 #include <RHICommon.h>
 
-#include "Vulkan.h"
+#include <Vulkan.h>
 
-#include "VulkanRHICore.h"
-#include "VulkanUtil.h"
+#include <VulkanRHICore.h>
+#include <VulkanUtil.h>
 
-#include "VulkanWorkCounter.h"
+#include <VulkanWorkCounter.h>
 
-#include "VulkanRHIFactory.h"
-#include "VulkanRHIDevice.h"
-#include "VulkanRHICommandQueue.h"
-#include "VulkanRHISwapchain.h"
+#include <VulkanRHIFactory.h>
+#include <VulkanRHIDevice.h>
+#include <VulkanRHICommandQueue.h>
+#include <VulkanRHISwapchain.h>
 
-#include "VulkanRHICommandList.h"
-#include "VulkanRHIFence.h"
+#include <VulkanRHICommandList.h>
+#include <VulkanRHIFence.h>
 
-#include "VulkanRHITechnique.h"
-#include "VulkanRHIPipelineStateObject.h"
+#include <VulkanRHITechnique.h>
+#include <VulkanRHIPipelineStateObject.h>
 
-#include "VulkanRHITexture.h"
-#include "VulkanRHIBuffer.h"
+#include <VulkanRHITexture.h>
+#include <VulkanRHIBuffer.h>
 
-#include "VulkanDescriptorPool.h"
-#include "VulkanHLSLCompiler.h"
-#include "VulkanMemoryAllocator.h"
-#include "VulkanOneShotCommandList.h"
+#include <VulkanDescriptorPool.h>
+#include <VulkanHLSLCompiler.h>
+#include <VulkanMemoryAllocator.h>
+#include <VulkanOneShotCommandList.h>
 
 namespace GameEngine
 {
@@ -36,11 +36,12 @@ namespace GameEngine
 	{
 		// NOTE - not constructing staging buffer through VulkanRHIBuffer 
 		// because of insufficient number of flags in RHIBuffer::Description
-		static void transferDataToGPU(
+		static void TransferDataToGPU(
 			VulkanRHIBuffer::Ptr buffer,
 			VmaAllocator allocator,
 			VulkanOneShotCommandList& oneShotCmdBuf,
-			const RHIBuffer::Description& description) {
+			const RHIBuffer::Description& description) 
+		{
 			vk::DeviceSize bufferSize = GetBufferSize(description);
 			VmaAllocation stagingBufferAllocation = nullptr;
 
@@ -48,13 +49,15 @@ namespace GameEngine
 			assert(description.initData != nullptr);
 			VULKAN_RHI_VERIFY(stagingBufferAllocation == nullptr);
 
-			vk::BufferCreateInfo bufInfo = {
+			vk::BufferCreateInfo bufInfo = 
+			{
 				.size = bufferSize,
 				.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferSrc,
 				.sharingMode = vk::SharingMode::eExclusive
 			};
 
-			VmaAllocationCreateInfo allocInfo = {
+			VmaAllocationCreateInfo allocInfo = 
+			{
 				.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
 				.usage = VMA_MEMORY_USAGE_AUTO,
 				.requiredFlags = 0,
@@ -99,13 +102,15 @@ namespace GameEngine
 
 			VULKAN_RHI_CHECK_RESULT(commandBuffer.begin(vk::CommandBufferBeginInfo{}));
 			{
-				vk::BufferCopy2 copy = {
+				vk::BufferCopy2 copy = 
+				{
 					.srcOffset = 0,
 					.dstOffset = 0,
 					.size = bufferSize
 				};
 
-				vk::CopyBufferInfo2 copyInfo = {
+				vk::CopyBufferInfo2 copyInfo = 
+				{
 					.srcBuffer = stagingBuffer,
 					.dstBuffer = buffer->GetBuffer(),
 					.regionCount = 1,
@@ -139,7 +144,7 @@ namespace GameEngine
 
 			m_CommandBuffer = new VulkanRHICommandList(*m_WorkCounter, m_Device, *m_DescriptorPool, m_SwapChain.Get());
 
-			m_HLSLCompiler = new VulkanHLSLCompiler();
+			m_HLSLCompiler = std::make_unique<VulkanHLSLCompiler>();
 
 			m_OneShotCommandList = std::make_unique<VulkanOneShotCommandList>(m_Device, m_CommandQueue);
 		}
@@ -156,8 +161,9 @@ namespace GameEngine
 				m_MemoryAllocator->GetAllocator(),
 				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
-			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) {
-				transferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
+			{
+				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
 			}
 
 			return buffer;
@@ -170,8 +176,9 @@ namespace GameEngine
 				m_MemoryAllocator->GetAllocator(),
 				vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
-			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) {
-				transferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
+			{
+				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
 			}
 
 			return buffer;
@@ -193,8 +200,9 @@ namespace GameEngine
 			VulkanRHIBuffer::Ptr buffer = new VulkanRHIBuffer(description, m_MemoryAllocator->GetAllocator());
 			
 			// NOTE - it is obviously bad to do it like this, one buffer at a time, but for now I think it's fine
-			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) {
-				transferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
+			{
+				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
 			}
 
 			return buffer;
@@ -211,9 +219,11 @@ namespace GameEngine
 
 			for (const RHITechnique::RootSignatureDescription& signatureDesc : rootSignature)
 			{
-				if (signatureDesc.IsConstantBuffer) {
+				if (signatureDesc.IsConstantBuffer) 
+				{
 					bindings.emplace_back(
-						vk::DescriptorSetLayoutBinding{
+						vk::DescriptorSetLayoutBinding
+						{
 							.binding = signatureDesc.SlotIndex,
 							.descriptorType = vk::DescriptorType::eUniformBuffer,
 							.descriptorCount = 1,
@@ -223,12 +233,14 @@ namespace GameEngine
 							.pImmutableSamplers = nullptr
 						});
 				}
-				else {
+				else 
+				{
 					ASSERT_NOT_IMPLEMENTED;
 				}
 			}
 
-			vk::DescriptorSetLayoutCreateInfo descSetLayoutCreateInfo = {
+			vk::DescriptorSetLayoutCreateInfo descSetLayoutCreateInfo =
+			{
 				.bindingCount = static_cast<uint32_t>(bindings.size()),
 				.pBindings = bindings.data()
 			};
@@ -242,9 +254,10 @@ namespace GameEngine
 			{
 				std::wstring shaderPath = Core::g_FileSystem->GetShaderPath(shaderDesc.ShaderFile);
 
-				RefCountPtr<IDxcBlob> code = m_HLSLCompiler->CompileShader(m_Device, shaderPath, shaderDesc.EntryPoint, GetShaderTarget(shaderDesc.Type));
+				RefCountPtr<IDxcBlob> code = m_HLSLCompiler->CompileShader(shaderPath, shaderDesc.EntryPoint, GetShaderTarget(shaderDesc.Type));
 
-				vk::ShaderModuleCreateInfo createInfo = {
+				vk::ShaderModuleCreateInfo createInfo = 
+				{
 					.codeSize = code->GetBufferSize(),
 					.pCode = reinterpret_cast<const uint32_t*>(code->GetBufferPointer())
 				};
@@ -254,7 +267,8 @@ namespace GameEngine
 				shaderStagesList.emplace_back(std::move(shaderModule));
 			}
 
-			vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
+			vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = 
+			{
 				.setLayoutCount = 1,
 				.pSetLayouts = &descriptorSetLayout.get(),
 				.pushConstantRangeCount = 0
@@ -288,11 +302,13 @@ namespace GameEngine
 			vertexInputInfo.setVertexBindingDescriptions({ bindingDesc });
 			vertexInputInfo.setVertexAttributeDescriptions(attributeDesc);
 
-			vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {
+			vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = 
+			{
 				.topology = ConvertToVkPrimitiveTopology(description.PrimitiveTopology)
 			};
 
-			vk::PipelineViewportStateCreateInfo viewportStateInfo = {
+			vk::PipelineViewportStateCreateInfo viewportStateInfo = 
+			{
 				.viewportCount = 1,
 				.scissorCount = 1
 			};
@@ -313,7 +329,8 @@ namespace GameEngine
 				attachments.emplace_back(ConvertToVkColorBlendAttachment(description.BlendState.RenderTarget[i]));
 			}
 
-			vk::PipelineColorBlendStateCreateInfo colorBlendingInfo = {
+			vk::PipelineColorBlendStateCreateInfo colorBlendingInfo = 
+			{
 				// NOTE - assuming that all logic ops are equal in render targets, because they should be in vulkan
 				.logicOpEnable =
 					(description.NumRenderTargets > 0)
@@ -326,7 +343,8 @@ namespace GameEngine
 			};
 			colorBlendingInfo.setAttachments(attachments);
 
-			std::vector dynamicStates = {
+			std::vector dynamicStates = 
+			{
 				vk::DynamicState::eViewport,
 				vk::DynamicState::eScissor
 			};
@@ -340,13 +358,15 @@ namespace GameEngine
 				colorAttachmentFormats.emplace_back(ConvertToVkFormat(description.RTVFormats[i]));
 			}
 
-			vk::PipelineRenderingCreateInfo renderingInfo = {
+			vk::PipelineRenderingCreateInfo renderingInfo = 
+			{
 				.depthAttachmentFormat = ConvertToVkFormat(description.DSVFormat),
 				.stencilAttachmentFormat = ConvertToVkFormat(description.DSVFormat)
 			};
 			renderingInfo.setColorAttachmentFormats(colorAttachmentFormats);
 
-			vk::GraphicsPipelineCreateInfo pipelineInfo = {
+			vk::GraphicsPipelineCreateInfo pipelineInfo = 
+			{
 				.pNext = &renderingInfo,
 				.pVertexInputState = &vertexInputInfo,
 				.pInputAssemblyState = &inputAssemblyInfo,
@@ -364,10 +384,11 @@ namespace GameEngine
 			const RHITechnique::ShaderInfo& shaderInfo = vkTechnique->GetGeneralShaderInfo();
 			const VulkanRHITechnique::ShaderStagesList& shaderModules = vkTechnique->GetShaderStages();
 
-
 			shaderStages.reserve(shaderModules.size());
-			for (std::size_t i = 0; i < shaderModules.size(); i++) {
-				shaderStages.emplace_back(vk::PipelineShaderStageCreateInfo{
+			for (std::size_t i = 0; i < shaderModules.size(); i++) 
+			{
+				shaderStages.emplace_back(vk::PipelineShaderStageCreateInfo
+					{
 						.stage = ConvertToShaderStage(shaderInfo[i].Type),
 						.module = shaderModules[i].get(),
 						.pName = shaderInfo[i].EntryPoint.c_str()

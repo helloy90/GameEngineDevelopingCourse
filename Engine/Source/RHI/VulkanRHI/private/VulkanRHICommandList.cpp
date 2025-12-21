@@ -1,14 +1,14 @@
-#include "VulkanRHICommandList.h"
+#include <VulkanRHICommandList.h>
 
-#include "RenderCore.h"
+#include <RenderCore.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
-#include "VulkanRHICore.h"
+#include <VulkanRHICore.h>
 
-#include "VulkanRHIBuffer.h"
-#include "VulkanRHIPipelineStateObject.h"
-#include "VulkanRHISwapChain.h"
+#include <VulkanRHIBuffer.h>
+#include <VulkanRHIPipelineStateObject.h>
+#include <VulkanRHISwapChain.h>
 
 namespace GameEngine
 {
@@ -29,7 +29,7 @@ namespace GameEngine
 			vk::CommandBufferAllocateInfo info = {
 				.commandPool = m_CommandAllocator->GetCommandPool(),
 				.level = vk::CommandBufferLevel::ePrimary,
-				.commandBufferCount = static_cast<uint32_t>(workCounter.multiBifferingCount())
+				.commandBufferCount = static_cast<uint32_t>(workCounter.MultiBufferingCount())
 			};
 
 			m_CommandBuffer = VulkanUtil::GetCheckedVkValue(device->GetDevice().allocateCommandBuffersUnique(info));
@@ -51,7 +51,8 @@ namespace GameEngine
 				vk::ImageAspectFlagBits::eColor
 			);
 
-			m_ColorAttachmentInfo = {
+			m_ColorAttachmentInfo = 
+			{
 				.imageView = vkRenderTarget->GetImageView(),
 				.imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
 				.loadOp = vk::AttachmentLoadOp::eClear,
@@ -86,7 +87,8 @@ namespace GameEngine
 				aspect
 			);
 
-			m_DepthAttachmentInfo = {
+			m_DepthAttachmentInfo = 
+			{
 				.imageView = vkDepthStencil->GetImageView(),
 
 				.imageLayout = layout,
@@ -103,10 +105,13 @@ namespace GameEngine
 			VULKAN_RHI_VERIFY(TargetsNum == 1);
 			// NOTE - textures unused as everything has been set in clear values functions
 			// This function will only be a signal to start rendering
-			vk::RenderingInfo renderingInfo = {
-				.renderArea = {
+			vk::RenderingInfo renderingInfo = 
+			{
+				.renderArea = 
+				{
 					.offset = {0, 0}, 
-					.extent = {static_cast<uint32_t>(renderTarget->GetWidth()), static_cast<uint32_t>(renderTarget->GetHeight())}},
+					.extent = {static_cast<uint32_t>(renderTarget->GetWidth()), static_cast<uint32_t>(renderTarget->GetHeight())}
+				},
 				.layerCount = 1,
 				.colorAttachmentCount = TargetsNum,
 				.pColorAttachments = &m_ColorAttachmentInfo,
@@ -120,7 +125,8 @@ namespace GameEngine
 		{
 			GetCurrentBuffer().setViewport(
 				0,
-				vk::Viewport{
+				vk::Viewport
+				{
 					.x = viewport.LeftX,
 					.y = viewport.GetHeight(),
 					.width = viewport.GetWidth(),
@@ -135,7 +141,8 @@ namespace GameEngine
 		{
 			GetCurrentBuffer().setScissor(
 				0,
-				vk::Rect2D{
+				vk::Rect2D
+				{
 					.offset = vk::Offset2D(scissorRect.LeftX, scissorRect.TopY),
 					.extent = vk::Extent2D(scissorRect.RightX, scissorRect.BottomY)
 				});
@@ -144,7 +151,8 @@ namespace GameEngine
 		void VulkanRHICommandList::Close()
 		{
 			// NOTE - one time check for Close() in RenderEngine constructor
-			if (!begun) {
+			if (!begun) 
+			{
 				return;
 			}
 
@@ -186,14 +194,16 @@ namespace GameEngine
 			VULKAN_RHI_VERIFY(m_CurrentTechnique != nullptr);
 			VulkanRHIBuffer* vkBuffer = reinterpret_cast<VulkanRHIBuffer*>(buffer.Get());
 
-			m_DescriptorInfos.emplace_back(vk::DescriptorBufferInfo{
+			m_DescriptorInfos.emplace_back(vk::DescriptorBufferInfo
+				{
 				.buffer = vkBuffer->GetBuffer(),
 				.offset = bufferOffset * vkBuffer->GetDesc().ElementSize,
 				// NOTE - assuming, as written in shader, that only one value is used
 				.range = vkBuffer->GetDesc().ElementSize
 				});
 
-			m_DescriptorWrites.emplace_back(vk::WriteDescriptorSet{
+			m_DescriptorWrites.emplace_back(vk::WriteDescriptorSet
+				{
 				.dstSet = {},
 				.dstBinding = ParameterIdx,
 				.dstArrayElement = 0,
@@ -241,7 +251,7 @@ namespace GameEngine
 
 		RenderNativeObject VulkanRHICommandList::GetNativeObject()
 		{
-			return RenderNativeObject(&m_CommandBuffer[m_WorkCounter.currentIndex()].get());
+			return RenderNativeObject(&m_CommandBuffer[m_WorkCounter.CurrentIndex()].get());
 		}
 
 		RHICommandAllocator::Ptr VulkanRHICommandList::GetAllocator() const
@@ -259,7 +269,8 @@ namespace GameEngine
 			vk::ImageLayout newLayout,
 			vk::ImageAspectFlags aspectFlags)
 		{
-			vk::ImageMemoryBarrier2 barrier = {
+			vk::ImageMemoryBarrier2 barrier = 
+			{
 				.srcStageMask = srcStageMask,
 				.srcAccessMask = srcAccessMask,
 				.dstStageMask = dstStageMask,
@@ -269,16 +280,18 @@ namespace GameEngine
 				.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
 				.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
 				.image = texture->GetImage(),
-				.subresourceRange = {
+				.subresourceRange = 
+				{
 					.aspectMask = aspectFlags,
 					.baseMipLevel = 0,
 					.levelCount = vk::RemainingMipLevels,
 					.baseArrayLayer = 0,
 					.layerCount = vk::RemainingArrayLayers
-					}
+				}
 			};
 
-			vk::DependencyInfo info = {
+			vk::DependencyInfo info = 
+			{
 				.dependencyFlags = {},
 				.imageMemoryBarrierCount = 1,
 				.pImageMemoryBarriers = &barrier
@@ -289,7 +302,7 @@ namespace GameEngine
 
 		vk::CommandBuffer& VulkanRHICommandList::GetCurrentBuffer()
 		{
-			return m_CommandBuffer[m_WorkCounter.currentIndex()].get();
+			return m_CommandBuffer[m_WorkCounter.CurrentIndex()].get();
 		}
 
 		bool VulkanRHICommandList::HasBegun() const

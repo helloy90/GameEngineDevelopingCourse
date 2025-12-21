@@ -1,18 +1,18 @@
-#include "VulkanRHISwapChain.h"
+#include <VulkanRHISwapChain.h>
 
-#include "RenderCore.h"
+#include <RenderCore.h>
 #include "Window/IWindow.h"
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
-#include "VulkanRHICommandList.h"
+#include <VulkanRHICommandList.h>
 
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		static vk::SurfaceFormatKHR choseSurfaceFormat(const vk::PhysicalDevice& physDevice, const vk::SurfaceKHR& surface)
+		static vk::SurfaceFormatKHR ChooseSurfaceFormat(const vk::PhysicalDevice& physDevice, const vk::SurfaceKHR& surface)
 		{
 			std::vector<vk::SurfaceFormatKHR> formats = VulkanUtil::GetCheckedVkValue(physDevice.getSurfaceFormatsKHR(surface));
 
@@ -23,10 +23,12 @@ namespace GameEngine
 			// NOTE - using this format for auto gamma correction
 			const vk::Format desiredFormat = vk::Format::eB8G8R8A8Unorm;
 
-			auto correctFormatIter = std::ranges::find_if(
-				formats.begin(), formats.end(), [&desiredFormat](const vk::SurfaceFormatKHR& format) -> bool {
+			std::vector<vk::SurfaceFormatKHR>::iterator correctFormatIter = std::ranges::find_if(
+				formats.begin(), formats.end(), [&desiredFormat](const vk::SurfaceFormatKHR& format) -> bool 
+				{
 					return format.format == desiredFormat && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
 				});
+
 			if (correctFormatIter != formats.end())
 			{
 				selected = *correctFormatIter;
@@ -35,7 +37,7 @@ namespace GameEngine
 			return selected;
 		}
 
-		static vk::PresentModeKHR chosePresentMode(const vk::PhysicalDevice& physDevice, const vk::SurfaceKHR& surface, bool useVsync)
+		static vk::PresentModeKHR ChoosePresentMode(const vk::PhysicalDevice& physDevice, const vk::SurfaceKHR& surface, bool useVsync)
 		{
 			std::vector<vk::PresentModeKHR> modes = VulkanUtil::GetCheckedVkValue(physDevice.getSurfacePresentModesKHR(surface));
 
@@ -51,14 +53,15 @@ namespace GameEngine
 			return selected;
 		}
 
-		static vk::Extent2D choseSwapChainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, vk::Extent2D resolution)
+		static vk::Extent2D ChooseSwapChainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, vk::Extent2D resolution)
 		{
 			if (capabilities.currentExtent.width != (std::numeric_limits<std::uint32_t>::max)())
 			{
 				return capabilities.currentExtent;
 			}
 
-			return {
+			return 
+			{
 				std::clamp<uint32_t>(
 					resolution.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
 				std::clamp<uint32_t>(
@@ -80,7 +83,7 @@ namespace GameEngine
 			, m_Device(device->GetDevice())
 			, m_QueueFamily(device->GetUniversalQueueIdx())
 		{
-			m_CurrentBackBufferIdx = m_WorkCounter.currentIndex();
+			m_CurrentBackBufferIdx = m_WorkCounter.CurrentIndex();
 
 			Resize(device, 1, 1);
 		}
@@ -122,21 +125,17 @@ namespace GameEngine
 			m_Queue->SetSyncObjects(
 				{
 					.available = GetImageAvailableSem(),
-					.readyForPresent = GetImageReadyForPresentSem(),
 					.commandsComplete = m_Fence->GetFence()
 				});
 		}
 
 		void VulkanRHISwapChain::Present()
 		{
-
 			VULKAN_RHI_CHECK_RESULT(m_Device.waitForFences({ m_Fence->GetFence() }, vk::True, 1000000000));
-			VULKAN_RHI_CHECK_RESULT(m_Device.resetFences({ m_Fence->GetFence() }));
+			VULKAN_RHI_CHECK_RESULT(m_Device.resetFences({ m_Fence->GetFence() }));;
 
-			//vk::Semaphore presentSemaphore = GetImageReadyForPresentSem();
-
-			vk::PresentInfoKHR presentInfo = {
-
+			vk::PresentInfoKHR presentInfo = 
+			{
 				.swapchainCount = 1,
 				.pSwapchains = &m_CurrentSwapChain.swapchain.get(),
 				.pImageIndices = &m_ImageIndex
@@ -148,19 +147,18 @@ namespace GameEngine
 
 			m_CurrentSemaphoreIndex = (m_CurrentSemaphoreIndex + 1) % m_CurrentSwapChain.imageAvailable.size();
 			// NOTE - doing it here since RHI interface does not have separate EndFrame function
-			m_WorkCounter.submit();
+			m_WorkCounter.Submit();
 
-			m_CurrentBackBufferIdx = m_WorkCounter.currentIndex();
-
+			m_CurrentBackBufferIdx = m_WorkCounter.CurrentIndex();
 		}
-
 
 		RenderNativeObject VulkanRHISwapChain::GetNativeObject()
 		{
 			return RenderNativeObject(&m_CurrentSwapChain.swapchain.get());
 		}
 
-		vk::SwapchainKHR VulkanRHISwapChain::GetSwapChain() const {
+		vk::SwapchainKHR VulkanRHISwapChain::GetSwapChain() const 
+		{
 			return m_CurrentSwapChain.swapchain.get();
 		}
 
@@ -179,9 +177,9 @@ namespace GameEngine
 			const vk::SurfaceCapabilitiesKHR surfaceCapabilities = VulkanUtil::GetCheckedVkValue(
 				m_PhysicalDevice.getSurfaceCapabilitiesKHR(m_Surface.GetSurface()));
 
-			const vk::SurfaceFormatKHR format = choseSurfaceFormat(m_PhysicalDevice, m_Surface.GetSurface());
-			const vk::PresentModeKHR presentMode = chosePresentMode(m_PhysicalDevice, m_Surface.GetSurface(), m_UseVsync);
-			const vk::Extent2D extent = choseSwapChainExtent(surfaceCapabilities, resolution);
+			const vk::SurfaceFormatKHR format = ChooseSurfaceFormat(m_PhysicalDevice, m_Surface.GetSurface());
+			const vk::PresentModeKHR presentMode = ChoosePresentMode(m_PhysicalDevice, m_Surface.GetSurface(), m_UseVsync);
+			const vk::Extent2D extent = ChooseSwapChainExtent(surfaceCapabilities, resolution);
 
 			std::uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
 			if (surfaceCapabilities.maxImageCount > 0)
@@ -192,22 +190,18 @@ namespace GameEngine
 			SwapChainData newSwapChain;
 
 			std::size_t imageAvailableSemCount =
-				std::max(static_cast<std::size_t>(imageCount), m_WorkCounter.multiBifferingCount());
+				std::max(static_cast<std::size_t>(imageCount), m_WorkCounter.MultiBufferingCount());
 
 			newSwapChain.imageAvailable.resize(imageAvailableSemCount);
-			for (std::size_t i = 0; i < newSwapChain.imageAvailable.size(); i++) {
+			for (std::size_t i = 0; i < newSwapChain.imageAvailable.size(); i++) 
+			{
 				newSwapChain.imageAvailable[i] =
 					VulkanUtil::GetCheckedVkValue(m_Device.createSemaphoreUnique(vk::SemaphoreCreateInfo{}));
 			}
 
-			newSwapChain.imageReadyToPresent.resize(imageCount);
-			for (std::size_t i = 0; i < newSwapChain.imageReadyToPresent.size(); i++) {
-				newSwapChain.imageReadyToPresent[i] =
-					VulkanUtil::GetCheckedVkValue(m_Device.createSemaphoreUnique(vk::SemaphoreCreateInfo{}));
-			}
-
 			{
-				vk::SwapchainCreateInfoKHR createInfo{
+				vk::SwapchainCreateInfoKHR createInfo = 
+				{
 					.surface = m_Surface.GetSurface(),
 					.minImageCount = imageCount,
 					.imageFormat = format.format,
@@ -236,22 +230,26 @@ namespace GameEngine
 
 			newSwapChain.elements.reserve(images.size());
 
-			for (std::size_t i = 0; i < images.size(); i++) {
-
-				vk::ImageViewCreateInfo createInfo{
+			for (std::size_t i = 0; i < images.size(); i++) 
+			{
+				vk::ImageViewCreateInfo createInfo = 
+				{
 					.image = images[i],
 					.viewType = vk::ImageViewType::e2D,
 					.format = format.format,
 					.components = vk::ComponentMapping{},
-					.subresourceRange = vk::ImageSubresourceRange{
+					.subresourceRange = vk::ImageSubresourceRange
+					{
 						.aspectMask = vk::ImageAspectFlagBits::eColor,
 						.baseMipLevel = 0,
 						.levelCount = 1,
 						.baseArrayLayer = 0,
-						.layerCount = 1}
+						.layerCount = 1
+					}
 				};
 
-				newSwapChain.elements.emplace_back(new VulkanRHITexture(RHITexture::Description{
+				newSwapChain.elements.emplace_back(new VulkanRHITexture(RHITexture::Description
+					{
 						.Dimension = RHITexture::Dimensions::Two,
 						// NOTE - circumventing check for initial VulkanRHIContext::Resize()
 						// as vulkan gives full window resolution images for swapchain
@@ -273,11 +271,6 @@ namespace GameEngine
 		vk::Semaphore& VulkanRHISwapChain::GetImageAvailableSem()
 		{
 			return m_CurrentSwapChain.imageAvailable[m_CurrentSemaphoreIndex].get();
-		}
-
-		vk::Semaphore& VulkanRHISwapChain::GetImageReadyForPresentSem()
-		{
-			return m_CurrentSwapChain.imageReadyToPresent[m_ImageIndex].get();
 		}
 	}
 }

@@ -3,7 +3,6 @@ file(GLOB
 	PRIVATE_FILES
 	private/*.cpp
 	private/*.h
-	# private/Texture/*.cpp
 )
 
 file(GLOB
@@ -59,11 +58,9 @@ target_link_libraries(VulkanRHI PRIVATE
 
 if (WINDOWS)
 	target_link_libraries(VulkanRHI PRIVATE
-		Vulkan::dxc_lib
-	)
-	
-	target_link_libraries(VulkanRHI PUBLIC
 		Vulkan::Vulkan
+
+		Vulkan::dxc_lib
 	)
 	
 	target_compile_definitions(VulkanRHI PRIVATE

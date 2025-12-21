@@ -1,9 +1,10 @@
-#include "VulkanGUIRenderBackend.h"
+#include <VulkanGUIRenderBackend.h>
 
-#include "VulkanRHIContext.h"
-#include "VulkanRHICore.h"
+#include <VulkanRHIContext.h>
+#include <VulkanRHICore.h>
 
-#include "RenderCore.h"
+#include <RenderCore.h>
+#include <array.h>
 
 #include <imgui.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -12,7 +13,7 @@ namespace GameEngine::GUI
 {
 	extern Render::HAL::RHIContext::Ptr g_RHIContext;
 
-  std::optional<vk::DescriptorPool> VulkanRenderBackend::m_DescriptorPool = std::nullopt;
+  std::unique_ptr<vk::DescriptorPool> VulkanRenderBackend::m_DescriptorPool = nullptr;
 
   PFN_vkVoidFunction vulkanLoaderFunction(const char* function_name, void*)
   {
@@ -20,12 +21,14 @@ namespace GameEngine::GUI
       *(VkInstance*)g_RHIContext->GetFactory()->GetNativeObject(), function_name);
   }
 
-	void VulkanRenderBackend::Init(Render::HAL::RHIContext::Ptr rhiContext) {
-	g_RHIContext = rhiContext;
+  void VulkanRenderBackend::Init(Render::HAL::RHIContext::Ptr rhiContext) 
+  {
+    g_RHIContext = rhiContext;
 
-	Render::HAL::VulkanRHIContext* vkRHI = reinterpret_cast<Render::HAL::VulkanRHIContext*>(g_RHIContext.get());
+    Render::HAL::VulkanRHIContext* vkRHI = reinterpret_cast<Render::HAL::VulkanRHIContext*>(g_RHIContext.get());
 
-    std::array descriptorTypes = {
+    Core::array<vk::DescriptorPoolSize, 11> descriptorTypes = 
+    {
       vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1000},
       vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 1000},
       vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, 1000},
@@ -36,33 +39,41 @@ namespace GameEngine::GUI
       vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, 1000},
       vk::DescriptorPoolSize{vk::DescriptorType::eUniformBufferDynamic, 1000},
       vk::DescriptorPoolSize{vk::DescriptorType::eStorageBufferDynamic, 1000},
-      vk::DescriptorPoolSize{vk::DescriptorType::eInputAttachment, 100} };
+      vk::DescriptorPoolSize{vk::DescriptorType::eInputAttachment, 100} 
+    };
 
-    vk::DescriptorPoolCreateInfo createInfo = {
+    vk::DescriptorPoolCreateInfo createInfo = 
+    {
       .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
       .maxSets = static_cast<uint32_t>(descriptorTypes.size() * 1000),
       .poolSizeCount = static_cast<uint32_t>(descriptorTypes.size()),
-      .pPoolSizes = descriptorTypes.data()
+      .pPoolSizes = descriptorTypes.begin()
     };
 
     vk::Device* devicePtr = (vk::Device*)vkRHI->GetDevice()->GetNativeObject();
 
     vk::ResultValue resVal = devicePtr->createDescriptorPool(createInfo);
 
-    if (resVal.result != vk::Result::eSuccess) {
+    if (resVal.result != vk::Result::eSuccess) 
+    {
       assert(false && "failed to create descriptor pool for ImGui!");
     }
 
-    m_DescriptorPool.emplace(std::move(resVal.value));
+    m_DescriptorPool = std::make_unique<vk::DescriptorPool>(std::move(resVal.value));
 
-    std::array targetFormats{ VK_FORMAT_B8G8R8A8_UNORM };
-    ImGui_ImplVulkan_InitInfo initInfo = {
+    Core::array<VkFormat, 1> targetFormats
+    { 
+      VK_FORMAT_B8G8R8A8_UNORM 
+    };
+
+    ImGui_ImplVulkan_InitInfo initInfo = 
+    {
       .Instance = *(VkInstance*)g_RHIContext->GetFactory()->GetNativeObject(),
       .PhysicalDevice = static_cast<VkPhysicalDevice>(vkRHI->GetPhysicalDevice()),
       .Device = *(VkDevice*)g_RHIContext->GetDevice()->GetNativeObject(),
       .QueueFamily = vkRHI->GetQueueIdx(),
       .Queue = *(VkQueue*)g_RHIContext->GetCommandQueue()->GetNativeObject(),
-      .DescriptorPool = m_DescriptorPool.value(),
+      .DescriptorPool = *m_DescriptorPool,
       .RenderPass = VK_NULL_HANDLE,
       .MinImageCount = 2,
       .ImageCount =
@@ -78,8 +89,8 @@ namespace GameEngine::GUI
           .pNext = nullptr,
           .viewMask = 0,
           .colorAttachmentCount = static_cast<std::uint32_t>(targetFormats.size()),
-          .pColorAttachmentFormats = targetFormats.data(),
-          .depthAttachmentFormat = {},
+          .pColorAttachmentFormats = targetFormats.begin(),
+          .depthAttachmentFormat = VK_FORMAT_D24_UNORM_S8_UINT,
           .stencilAttachmentFormat = {},
         },
       .Allocator = nullptr,
@@ -93,12 +104,14 @@ namespace GameEngine::GUI
 	  ImGui_ImplVulkan_CreateFontsTexture();
 	}
 
-	void VulkanRenderBackend::Render(ImDrawData* drawData) {
+	void VulkanRenderBackend::Render(ImDrawData* drawData) 
+  {
 		vk::CommandBuffer* buffer = (vk::CommandBuffer*)g_RHIContext->GetCommandList()->GetNativeObject();
 		ImGui_ImplVulkan_RenderDrawData(drawData, *buffer);
 	}
 
-	void VulkanRenderBackend::NewFrame() {
+	void VulkanRenderBackend::NewFrame() 
+  {
 		ImGui_ImplVulkan_NewFrame();
 	}
 }

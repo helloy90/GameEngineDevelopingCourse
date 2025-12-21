@@ -1,4 +1,4 @@
-#include "VulkanMemoryAllocator.h"
+#include <VulkanMemoryAllocator.h>
 
 namespace GameEngine
 {
@@ -10,7 +10,8 @@ namespace GameEngine
 			functions.vkGetInstanceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr;
 			functions.vkGetDeviceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetDeviceProcAddr;
 
-			VmaAllocatorCreateInfo createInfo{
+			VmaAllocatorCreateInfo createInfo = 
+			{
 				.flags = {},
 				.physicalDevice = device->GetPhysicalDevice(),
 				.device = device->GetDevice(),

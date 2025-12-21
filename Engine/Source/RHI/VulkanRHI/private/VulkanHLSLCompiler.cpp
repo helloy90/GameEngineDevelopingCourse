@@ -1,8 +1,8 @@
-#include "VulkanHLSLCompiler.h"
+#include <VulkanHLSLCompiler.h>
 
 #include <Debug/Console.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
 namespace GameEngine
 {
@@ -19,7 +19,6 @@ namespace GameEngine
 		}
 
 		RefCountPtr<IDxcBlob> VulkanHLSLCompiler::CompileShader(
-			VulkanRHIDevice::Ptr device,
 			const std::wstring& filename, 
 			const std::string& entrypoint, 
 			const std::string& target) const
@@ -32,17 +31,19 @@ namespace GameEngine
 
 			assert(SUCCEEDED(hres));
 
-			std::wstring entrypointWStr = VulkanUtil::widenString(entrypoint);
-			std::wstring targetWStr = VulkanUtil::widenString(target);
+			std::wstring entrypointWStr = VulkanUtil::WidenString(entrypoint);
+			std::wstring targetWStr = VulkanUtil::WidenString(target);
 
-			std::vector<LPCWSTR> arguments = {
+			std::vector<LPCWSTR> arguments = 
+			{
 				L"-spirv",
 				L"-T", targetWStr.c_str(),
 				L"-E", entrypointWStr.c_str(),
 				filename.c_str()
 			};
 
-			DxcBuffer buffer = {
+			DxcBuffer buffer = 
+			{
 				.Ptr = sourceBlob->GetBufferPointer(),
 				.Size = sourceBlob->GetBufferSize(),
 				.Encoding = DXC_CP_ACP
@@ -74,17 +75,8 @@ namespace GameEngine
 
 			RefCountPtr<IDxcBlob> code;
 			result->GetResult(&code);
-			std::filesystem::path filepath = std::filesystem::path(filename);
-			filepath.replace_filename(std::format("Object_{}", entrypoint));
-			filepath.replace_extension(".spv");
 
 			return code;
-		}
-
-		RenderNativeObject VulkanHLSLCompiler::GetNativeObject()
-		{
-			assert(false && "No native object should be provided for compiler!");
-			return nullptr;
 		}
 	}
 }

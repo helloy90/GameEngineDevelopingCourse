@@ -12,29 +12,24 @@
 // NOTE - Using DXCompiler, provided by Vulkan SDK
 #include <dxc/dxcapi.h>
 
-#include "RHICommon.h"
+#include <RHICommon.h>
 
-#include "VulkanRHIDevice.h"
+#include <VulkanRHIDevice.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		class VulkanHLSLCompiler final : public RefCounter<RenderBackendResource> {
-		public:
-			using Ptr = RefCountPtr<VulkanHLSLCompiler>;
+		class VulkanHLSLCompiler final {
 		
 		public:
 			VulkanHLSLCompiler();
 
 		public:
 			RefCountPtr<IDxcBlob> CompileShader(
-				VulkanRHIDevice::Ptr device,
 				const std::wstring& filename, 
 				const std::string& entrypoint, 
 				const std::string& target) const;
-
-		virtual RenderNativeObject GetNativeObject() override;
 
 		private:
 			RefCountPtr<IDxcCompiler3> compiler = nullptr;

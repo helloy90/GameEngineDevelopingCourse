@@ -1,16 +1,16 @@
-#include "VulkanRHICommandAllocator.h"
+#include <VulkanRHICommandAllocator.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
 		VulkanRHICommandAllocator::VulkanRHICommandAllocator(VulkanRHIDevice::Ptr device)
-			: m_Pool{ VulkanUtil::GetCheckedVkValue(device->GetDevice().createCommandPoolUnique(vk::CommandPoolCreateInfo{
+			: m_Pool( VulkanUtil::GetCheckedVkValue(device->GetDevice().createCommandPoolUnique(vk::CommandPoolCreateInfo{
 					.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
 					.queueFamilyIndex = device->GetUniversalQueueIdx()
-				}))}
+				})))
 		{
 		}
 

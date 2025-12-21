@@ -1,50 +1,55 @@
-#include "VulkanRHIDevice.h"
+#include <VulkanRHIDevice.h>
 
-#include "VulkanUtil.h"
+#include <array.h>
+
+#include <VulkanUtil.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
 		template <std::size_t Size>
-		static std::string_view safeViewFromArray(const vk::ArrayWrapper1D<char, Size>& array)
+		static std::string_view SafeViewFromArray(const vk::ArrayWrapper1D<char, Size>& array)
 		{
 			const std::size_t length = static_cast<const char*>(std::memchr(array.data(), '\0', Size)) - array.data();
 			return std::string_view(array.data(), length);
 		}
 
-		static bool checkPhysicalDeviceExtentionsSupport(
+		static bool CheckPhysicalDeviceExtentionsSupport(
 			vk::PhysicalDevice physDevice, const std::vector<const char*>& deviceExtentions)
 		{
 			std::vector availableExtentions = VulkanUtil::GetCheckedVkValue(physDevice.enumerateDeviceExtensionProperties());
 
 			std::unordered_set<std::string_view> requestedExtentions(deviceExtentions.begin(), deviceExtentions.end());
 
-			for (const auto& ext : availableExtentions) {
-				requestedExtentions.erase(safeViewFromArray(ext.extensionName));
+			for (const vk::ExtensionProperties& ext : availableExtentions)
+			{
+				requestedExtentions.erase(SafeViewFromArray(ext.extensionName));
 			}
 
 			return requestedExtentions.empty();
 		}
 
-		static bool deviceTypeIsBetter(vk::PhysicalDeviceType first, vk::PhysicalDeviceType second)
+		static bool DeviceTypeIsBetter(vk::PhysicalDeviceType first, vk::PhysicalDeviceType second)
 		{
-			auto score = [](vk::PhysicalDeviceType type) -> int {
-				switch (type) {
-				case vk::PhysicalDeviceType::eVirtualGpu:
-					return 1;
-				case vk::PhysicalDeviceType::eIntegratedGpu:
-					return 2;
-				case vk::PhysicalDeviceType::eDiscreteGpu:
-					return 3;
-				default:
-					return 0;
-				}
+			auto score = [](vk::PhysicalDeviceType type) -> int 
+				{
+					switch (type) 
+					{
+					case vk::PhysicalDeviceType::eVirtualGpu:
+						return 1;
+					case vk::PhysicalDeviceType::eIntegratedGpu:
+						return 2;
+					case vk::PhysicalDeviceType::eDiscreteGpu:
+						return 3;
+					default:
+						return 0;
+					}
 				};
 			return (score(first) > score(second));
 		}
 
-		static vk::PhysicalDevice pickPhysicalDevice(
+		static vk::PhysicalDevice PickPhysicalDevice(
 			vk::Instance instance, const std::vector<const char*>& deviceExtentions)
 		{
 			std::vector physDevices = VulkanUtil::GetCheckedVkValue(instance.enumeratePhysicalDevices());
@@ -54,16 +59,16 @@ namespace GameEngine
 			vk::PhysicalDevice bestDevice = physDevices.front();
 			vk::PhysicalDeviceProperties bestDeviceProps = physDevices.front().getProperties();
 
-			for (const auto& physDevice : physDevices)
+			for (const vk::PhysicalDevice& physDevice : physDevices)
 			{
 				vk::PhysicalDeviceProperties deviceProps = physDevice.getProperties();
 
-				if (!checkPhysicalDeviceExtentionsSupport(physDevice, deviceExtentions))
+				if (!CheckPhysicalDeviceExtentionsSupport(physDevice, deviceExtentions))
 				{
 					continue;
 				}
 
-				if (deviceTypeIsBetter(deviceProps.deviceType, bestDeviceProps.deviceType))
+				if (DeviceTypeIsBetter(deviceProps.deviceType, bestDeviceProps.deviceType))
 				{
 					bestDevice = physDevice;
 					bestDeviceProps = deviceProps;
@@ -73,7 +78,7 @@ namespace GameEngine
 			return bestDevice;
 		}
 
-		static uint32_t getQueueFamilyIndex(vk::PhysicalDevice physDevice, vk::QueueFlags flags)
+		static uint32_t GetQueueFamilyIndex(vk::PhysicalDevice physDevice, vk::QueueFlags flags)
 		{
 			std::vector queueFamilies = physDevice.getQueueFamilyProperties();
 
@@ -91,15 +96,17 @@ namespace GameEngine
 			VULKAN_RHI_PANIC("Could not find queue family with all requested flags!");
 		}
 
-		static vk::UniqueDevice createLogicalDevice(
+		static vk::UniqueDevice CreateLogicalDevice(
 			vk::PhysicalDevice physDevice,
 			uint32_t universalQueueFamily,
 			const std::vector<const char*>& deviceExtentions)
 		{
 			const float defaultQueuePriority = 1.0f;
 
-			const std::array queueInfos{
-				vk::DeviceQueueCreateInfo{
+			const Core::array<vk::DeviceQueueCreateInfo, 1> queueInfos = 
+			{
+				vk::DeviceQueueCreateInfo
+				{
 					.queueFamilyIndex = universalQueueFamily,
 					.queueCount = 1,
 					.pQueuePriorities = &defaultQueuePriority
@@ -111,20 +118,30 @@ namespace GameEngine
 				, vk::PhysicalDeviceDescriptorIndexingFeatures
 				, vk::PhysicalDeviceDynamicRenderingFeatures
 				, vk::PhysicalDeviceSynchronization2Features
-				> featureChain = {
+				> featureChain = 
+			{
 				// NOTE - add optional features here if nesessary
-				vk::PhysicalDeviceFeatures2{
-					.features = {
+				vk::PhysicalDeviceFeatures2
+				{
+					.features = 
+					{
 						.depthClamp = vk::True,
 					}
 				},
-				vk::PhysicalDeviceDescriptorIndexingFeatures{
+				vk::PhysicalDeviceDescriptorIndexingFeatures
+				{
+
 				},
-				{.dynamicRendering = vk::True},
-				{.synchronization2 = vk::True}
+				{
+					.dynamicRendering = vk::True
+				},
+				{
+					.synchronization2 = vk::True
+				}
 			};
 
-			vk::DeviceCreateInfo createInfo{
+			vk::DeviceCreateInfo createInfo = 
+			{
 				.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
 			};
 
@@ -137,18 +154,19 @@ namespace GameEngine
 
 		VulkanRHIDevice::VulkanRHIDevice(VulkanRHIFactory::Ptr instance)
 		{
-			std::vector<const char*> deviceExtentions{
+			std::vector<const char*> deviceExtentions = 
+			{
 				vk::KHRSwapchainExtensionName
 			};
 
-			m_PhysDevice = pickPhysicalDevice(instance->GetInstance(), deviceExtentions);
+			m_PhysDevice = PickPhysicalDevice(instance->GetInstance(), deviceExtentions);
 
 			constexpr vk::QueueFlags universalQueueFlags =
 				vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute | vk::QueueFlagBits::eTransfer;
 
-			universalQueueIdx = getQueueFamilyIndex(m_PhysDevice, universalQueueFlags);
+			universalQueueIdx = GetQueueFamilyIndex(m_PhysDevice, universalQueueFlags);
 
-			m_NativeDevice = createLogicalDevice(m_PhysDevice, universalQueueIdx, deviceExtentions);
+			m_NativeDevice = CreateLogicalDevice(m_PhysDevice, universalQueueIdx, deviceExtentions);
 
 			VULKAN_HPP_DEFAULT_DISPATCHER.init(m_NativeDevice.get());
 		}

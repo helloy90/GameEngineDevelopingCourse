@@ -16,14 +16,14 @@
 
 #endif
 
-#include "vulkan/vulkan.hpp"
+#include <vulkan/vulkan.hpp>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
     namespace VulkanUtil {
-      inline std::wstring widenString(const std::string& str)
+      inline std::wstring WidenString(const std::string& str)
       {
         std::vector<wchar_t> buffer(
           MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size() + 1, 0, 0));
@@ -36,7 +36,7 @@ namespace GameEngine
 
 		namespace VulkanAssert {
       // NOTE - using this to make release build asserts and catch errors more easily
-			[[noreturn]] inline void panic(
+			[[noreturn]] inline void Panic(
 				const std::source_location& loc,
 				std::string message)
 			{
@@ -44,11 +44,11 @@ namespace GameEngine
 					NULL,
 					std::format(
             L"Panicked at {} ({}:{}), `{}`: \n\t{}",
-            VulkanUtil::widenString(loc.file_name()),
+            VulkanUtil::WidenString(loc.file_name()),
             loc.line(),
             loc.column(),
-            VulkanUtil::widenString(loc.function_name()),
-            VulkanUtil::widenString(message)).c_str(),
+            VulkanUtil::WidenString(loc.function_name()),
+            VulkanUtil::WidenString(message)).c_str(),
 					L"Vulkan error occured!",
 					MB_ICONERROR | MB_OK);
 
@@ -59,7 +59,7 @@ namespace GameEngine
 }
 
 #define VULKAN_RHI_PANIC(fmtStr, ...)																																								                     \
-	GameEngine::Render::HAL::VulkanAssert::panic(std::source_location::current(), std::format(fmtStr, ##__VA_ARGS__))
+	GameEngine::Render::HAL::VulkanAssert::Panic(std::source_location::current(), std::format(fmtStr, ##__VA_ARGS__))
 
 // NOTE - these macroses are used for checks that should happen even in release builds
 #define VULKAN_RHI_VERIFYF(expr, format_str, ...)																																		                     \

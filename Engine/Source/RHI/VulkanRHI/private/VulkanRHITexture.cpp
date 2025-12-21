@@ -1,8 +1,8 @@
-#include "VulkanRHITexture.h"
+#include <VulkanRHITexture.h>
 
-#include "VulkanRHICore.h"
+#include <VulkanRHICore.h>
 
-#include "VulkanUtil.h"
+#include <VulkanUtil.h>
 
 namespace GameEngine
 {
@@ -27,7 +27,8 @@ namespace GameEngine
 		{
 			vk::Format format = ConvertToVkFormat(desc.Format);
 
-			vk::ImageCreateInfo imageInfo = {
+			vk::ImageCreateInfo imageInfo = 
+			{
 				.flags = {},
 				.imageType = GetImageType(desc.Dimension),
 				.format = format,
@@ -41,7 +42,8 @@ namespace GameEngine
 				.initialLayout = vk::ImageLayout::eUndefined
 			};
 
-			VmaAllocationCreateInfo allocInfo = {
+			VmaAllocationCreateInfo allocInfo = 
+			{
 				.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
 				.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
 				.requiredFlags = 0,
@@ -70,11 +72,13 @@ namespace GameEngine
 			m_Image = vk::Image(img);
 
 			// Creating default view
-			vk::ImageViewCreateInfo viewInfo = {
+			vk::ImageViewCreateInfo viewInfo = 
+			{
 				.image = m_Image,
 				.viewType = GetImageViewType(desc.Dimension),
 				.format = ConvertToVkFormat(desc.Format),
-				.subresourceRange = vk::ImageSubresourceRange{
+				.subresourceRange = vk::ImageSubresourceRange
+				{
 					.aspectMask = GetImageAspectFlags(format),
 					.baseMipLevel = 0,
 					.levelCount = vk::RemainingMipLevels,
@@ -89,7 +93,8 @@ namespace GameEngine
 		VulkanRHITexture::~VulkanRHITexture()
 		{
 			// almost all images have allocation, except swapchain images
-			if (m_Allocation != nullptr) {
+			if (m_Allocation != nullptr)
+			{
 				assert(m_Allocator != nullptr);
 				vmaDestroyImage(m_Allocator, VkImage(m_Image), m_Allocation);
 			}

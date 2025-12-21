@@ -1,6 +1,8 @@
-#include "VulkanOneShotCommandList.h"
+#include <VulkanOneShotCommandList.h>
 
-#include "VulkanUtil.h"
+#include <array.h>
+
+#include <VulkanUtil.h>
 
 namespace GameEngine
 {
@@ -10,19 +12,19 @@ namespace GameEngine
 			VulkanRHIDevice::Ptr device, VulkanRHICommandQueue::Ptr queue)
 			: m_Device(device->GetDevice())
 			, m_SubmitQueue(queue->GetQueue())
-			, m_Pool{
+			, m_Pool(
 				VulkanUtil::GetCheckedVkValue(device->GetDevice().createCommandPoolUnique(vk::CommandPoolCreateInfo{
 					.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
 					.queueFamilyIndex = device->GetUniversalQueueIdx()
-				})) }
-			, m_CommandBuffer{
+				})) )
+			, m_CommandBuffer(
 				std::move(VulkanUtil::GetCheckedVkValue(
 					device->GetDevice().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo{
 						.commandPool = m_Pool.get(),
 						.level = vk::CommandBufferLevel::ePrimary,
-						.commandBufferCount = 1})).front()) }
-			, m_Finished{ 
-				VulkanUtil::GetCheckedVkValue(device->GetDevice().createFenceUnique(vk::FenceCreateInfo{}))}
+						.commandBufferCount = 1})).front()) )
+			, m_Finished(
+				VulkanUtil::GetCheckedVkValue(device->GetDevice().createFenceUnique(vk::FenceCreateInfo{})))
 		{
 		}
 
@@ -35,8 +37,10 @@ namespace GameEngine
 		{
 			VULKAN_RHI_VERIFY(buffer == m_CommandBuffer.get());
 
-			std::array commandBufferSubmitInfo = {
-				vk::CommandBufferSubmitInfo{
+			Core::array<vk::CommandBufferSubmitInfo, 1> commandBufferSubmitInfo = 
+			{
+				vk::CommandBufferSubmitInfo
+				{
 					.commandBuffer = m_CommandBuffer.get(),
 					.deviceMask = 1
 				}

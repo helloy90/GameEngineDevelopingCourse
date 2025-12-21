@@ -1,14 +1,15 @@
-#include "VulkanRHICore.h"
+#include <VulkanRHICore.h>
 
-#include "Geometry.h"
+#include <Geometry.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		static uint32_t sizeFromFormat(vk::Format format)
+		static uint32_t SizeFromFormat(vk::Format format)
 		{
-			switch (format) {
+			switch (format) 
+			{
 			case vk::Format::eR32G32B32Sfloat:
 				return sizeof(float) * 3;
 			default:
@@ -19,7 +20,8 @@ namespace GameEngine
 
 		vk::Format ConvertToVkFormat(const ResourceFormat& resourceFormat)
 		{
-			switch (resourceFormat) {
+			switch (resourceFormat) 
+			{
 			case ResourceFormat::RGBA8_UNORM:
 				return vk::Format::eR8G8B8A8Unorm;
 			case ResourceFormat::RGB32_FLOAT:
@@ -40,7 +42,8 @@ namespace GameEngine
 
 		ResourceFormat ConvertToResourceFormat(vk::Format resourceFormat)
 		{
-			switch (resourceFormat) {
+			switch (resourceFormat) 
+			{
 			default:
 				ASSERT_NOT_IMPLEMENTED;
 				return ResourceFormat::UNKNOWN;
@@ -106,10 +109,11 @@ namespace GameEngine
 			assert(!inputLayout.empty());
 
 			// NOTE - assuming one vertex type
-			return vk::VertexInputBindingDescription{
-						.binding = inputLayout[0].InputSlot,
-						.stride = sizeof(RenderCore::Geometry::VertexType),
-						.inputRate = ConvertToVkInputRate(inputLayout[0].InputSlotClass)
+			return vk::VertexInputBindingDescription
+			{
+				.binding = inputLayout[0].InputSlot,
+				.stride = sizeof(RenderCore::Geometry::VertexType),
+				.inputRate = ConvertToVkInputRate(inputLayout[0].InputSlotClass)
 			};
 		}
 
@@ -122,14 +126,15 @@ namespace GameEngine
 			for (const RHITechnique::InputLayoutDescription& desc : inputLayout)
 			{
 				vk::Format format = ConvertToVkFormat(desc.Format);
-				description.emplace_back(vk::VertexInputAttributeDescription{
-					.location = desc.Index,
-					.binding = desc.InputSlot,
-					.format = format,
-					.offset = offset
+				description.emplace_back(vk::VertexInputAttributeDescription
+					{
+						.location = desc.Index,
+						.binding = desc.InputSlot,
+						.format = format,
+						.offset = offset
 					});
 
-				offset += sizeFromFormat(format);
+				offset += SizeFromFormat(format);
 			}
 
 			return description;
@@ -149,7 +154,8 @@ namespace GameEngine
 
 		vk::PipelineRasterizationStateCreateInfo ConvertToVkRasterizerInfo(const RasterizerDescription& rasterState)
 		{
-			return vk::PipelineRasterizationStateCreateInfo{
+			return vk::PipelineRasterizationStateCreateInfo
+			{
 				.depthClampEnable = static_cast<vk::Bool32>(rasterState.DepthClipEnable),
 				.rasterizerDiscardEnable = vk::False,
 				.polygonMode =
@@ -176,7 +182,8 @@ namespace GameEngine
 		vk::PipelineMultisampleStateCreateInfo GetMultisampleInfo(
 			const RasterizerDescription& rasterState, const BlendDescription& blendDesc)
 		{
-			return vk::PipelineMultisampleStateCreateInfo{
+			return vk::PipelineMultisampleStateCreateInfo
+			{
 				.rasterizationSamples =
 					(rasterState.MultisampleEnable)
 					? vk::SampleCountFlagBits::e4
@@ -215,7 +222,8 @@ namespace GameEngine
 		vk::StencilOpState ConvertToVkStencilOpState(
 			const StencilOpDescription& stencilOpDescription, uint32_t compareMask, uint32_t writeMask, uint32_t referenceMask)
 		{
-			return vk::StencilOpState{
+			return vk::StencilOpState
+			{
 				.failOp = ConvertToVkStencilOp(stencilOpDescription.StencilFailOp),
 				.passOp = ConvertToVkStencilOp(stencilOpDescription.StencilPassOp),
 				.depthFailOp = ConvertToVkStencilOp(stencilOpDescription.StencilDepthFailOp),
@@ -228,7 +236,8 @@ namespace GameEngine
 
 		vk::PipelineDepthStencilStateCreateInfo ConvertToVkDepthStencilInfo(const DepthStencilDescription& description)
 		{
-			return vk::PipelineDepthStencilStateCreateInfo{
+			return vk::PipelineDepthStencilStateCreateInfo
+			{
 				.depthTestEnable = static_cast<vk::Bool32>(description.DepthEnable),
 				.depthWriteEnable = static_cast<vk::Bool32>(description.DepthEnable),
 				.depthCompareOp = ConvertToVkCompareOp(description.DepthFunc),
@@ -352,10 +361,12 @@ namespace GameEngine
 
 		vk::Extent3D GetImageExtent(const RHITexture::Description& description)
 		{
-			return vk::Extent3D{
+			return vk::Extent3D
+			{
 				.width = static_cast<uint32_t>(description.Width),
 				.height = static_cast<uint32_t>(description.Height),
-				.depth = 1 };
+				.depth = 1 
+			};
 		}
 
 		vk::ImageUsageFlags GetImageUsageFlags(const RHITexture::UsageFlags::Flag& flags)

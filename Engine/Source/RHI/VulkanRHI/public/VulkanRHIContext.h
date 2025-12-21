@@ -76,7 +76,7 @@ namespace GameEngine
 			RefCountPtr<VulkanRHISwapChain> m_SwapChain = nullptr;
 			RefCountPtr<VulkanRHICommandList> m_CommandBuffer = nullptr;
 
-			RefCountPtr<VulkanHLSLCompiler> m_HLSLCompiler = nullptr;
+			std::unique_ptr<VulkanHLSLCompiler> m_HLSLCompiler = nullptr;
 			
 			std::unique_ptr<VulkanOneShotCommandList> m_OneShotCommandList;
 		};

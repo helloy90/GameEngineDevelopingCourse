@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Vulkan.h"
+#include <Vulkan.h>
 
-#include "RHICommandQueue.h"
+#include <RHICommandQueue.h>
 
-#include "VulkanRHIDevice.h"
+#include <VulkanRHIDevice.h>
 
 namespace GameEngine
 {
@@ -19,7 +19,6 @@ namespace GameEngine
 			// NOTE - set in SwapChain::MakeBackBufferPresentable, used here
 			struct SyncObjects {
 				vk::Semaphore available;
-				vk::Semaphore readyForPresent;
 
 				vk::Fence commandsComplete;
 			};

@@ -1,8 +1,10 @@
-#include "VulkanRHICommandQueue.h"
+#include <VulkanRHICommandQueue.h>
 
-#include "Vulkan.h"
+#include <array.h>
 
-#include "VulkanRHICommandList.h"
+#include <Vulkan.h>
+
+#include <VulkanRHICommandList.h>
 
 namespace GameEngine
 {
@@ -18,24 +20,30 @@ namespace GameEngine
 			std::vector<vk::CommandBufferSubmitInfo> bufferSubmitInfos;
 			bufferSubmitInfos.reserve(cmdLists.size());
 
-			for (std::size_t i = 0; i < cmdLists.size(); i++) {
+			for (std::size_t i = 0; i < cmdLists.size(); i++) 
+			{
 				VulkanRHICommandList* commandbuffer = reinterpret_cast<VulkanRHICommandList*>(cmdLists[i].Get());
 				// NOTE - return, if command buffer has not begun 
 				// (there is no need to execute anything in vulkan at initialization)
-				if (!commandbuffer->HasBegun()) {
+				if (!commandbuffer->HasBegun()) 
+				{
 					return;
 				}
-				bufferSubmitInfos.emplace_back(vk::CommandBufferSubmitInfo{
+				bufferSubmitInfos.emplace_back(vk::CommandBufferSubmitInfo
+				{
 					.commandBuffer = commandbuffer->GetCurrentBuffer(),
 					.deviceMask = 0
 				});
 			}
 
-			std::array wait = { vk::SemaphoreSubmitInfo{
+			Core::array<vk::SemaphoreSubmitInfo, 1> wait = 
+			{ vk::SemaphoreSubmitInfo
+				{
 					.semaphore = m_SyncObjects.available,
 					.stageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 					.deviceIndex = 0
-			}};
+				}
+			};
 
 			vk::SubmitInfo2 submitInfo = {};
 			submitInfo.setCommandBufferInfos(bufferSubmitInfos);
@@ -46,9 +54,9 @@ namespace GameEngine
 
 		void VulkanRHICommandQueue::SetSyncObjects(SyncObjects objects)
 		{
-			m_SyncObjects = {
+			m_SyncObjects = 
+			{
 				.available = objects.available,
-				.readyForPresent = objects.readyForPresent,
 				.commandsComplete = objects.commandsComplete
 			};
 		}

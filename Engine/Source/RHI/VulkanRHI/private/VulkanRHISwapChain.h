@@ -1,18 +1,18 @@
 #pragma once
 
-#include "RHISwapChain.h"
+#include <RHISwapChain.h>
 
-#include "Vulkan.h"
+#include <Vulkan.h>
 
-#include "VulkanSurface.h"
+#include <VulkanSurface.h>
 
-#include "VulkanWorkCounter.h"
+#include <VulkanWorkCounter.h>
 
-#include "VulkanRHIDevice.h"
-#include "VulkanRHIFactory.h"
-#include "VulkanRHICommandQueue.h"
-#include "VulkanRHIFence.h"
-#include "VulkanRHITexture.h"
+#include <VulkanRHIDevice.h>
+#include <VulkanRHIFactory.h>
+#include <VulkanRHICommandQueue.h>
+#include <VulkanRHIFence.h>
+#include <VulkanRHITexture.h>
 
 namespace GameEngine
 {
@@ -50,7 +50,6 @@ namespace GameEngine
 			void recreateSwapChain(vk::Extent2D resolution);
 
 			vk::Semaphore& GetImageAvailableSem();
-			vk::Semaphore& GetImageReadyForPresentSem();
 
 		private:
 			struct SwapChainData {
@@ -60,7 +59,6 @@ namespace GameEngine
 
 				std::vector<VulkanRHITexture::Ptr> elements;
 				std::vector<vk::UniqueSemaphore> imageAvailable;
-				std::vector<vk::UniqueSemaphore> imageReadyToPresent;
 			};
 
 		private:
