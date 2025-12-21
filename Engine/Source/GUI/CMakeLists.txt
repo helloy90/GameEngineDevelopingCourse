@@ -35,7 +35,7 @@ if (WINDOWS)
 		private/RenderBackends/Vulkan/*.h
 	)
 
-	set(VULKAN_LIBS_SEARCH_PATHS "${CMAKE_LIBRARY_PATH}/Vulkan/Bin"	"${CMAKE_LIBRARY_PATH}/Vulkan/Lib")
+	set(VULKAN_LIBS_SEARCH_PATHS "${CMAKE_LIBRARY_PATH}/Vulkan/Lib")
 	set(VULKAN_INCLUDE_DIRS "${CMAKE_LIBRARY_PATH}/Vulkan/Include")
 
 	find_library(Vulkan_LIBRARY
