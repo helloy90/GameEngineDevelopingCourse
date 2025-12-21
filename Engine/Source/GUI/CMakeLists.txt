@@ -10,8 +10,6 @@ file(GLOB
 )
 
 if (WINDOWS)
-	find_package(Vulkan 1.4.300 REQUIRED)
-
 	file(GLOB
 		PLATFORM_PUBLIC_FILES
 		public/Platforms/Windows/*.h
@@ -36,7 +34,16 @@ if (WINDOWS)
 		private/RenderBackends/Vulkan/*.cpp
 		private/RenderBackends/Vulkan/*.h
 	)
-	
+
+	set(VULKAN_LIBS_SEARCH_PATHS "${CMAKE_LIBRARY_PATH}/Vulkan/Bin"	"${CMAKE_LIBRARY_PATH}/Vulkan/Lib")
+	set(VULKAN_INCLUDE_DIRS "${CMAKE_LIBRARY_PATH}/Vulkan/Include")
+
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan-1 vulkan
+		PATHS 
+			${VULKAN_LIBS_SEARCH_PATHS}
+	)
+
 	find_library(IMGUI_DEBUG NAMES imgui
 		PATHS ${CMAKE_LIBRARY_PATH}/imgui/lib/Windows/Debug
 		NO_DEFAULT_PATH)
@@ -94,6 +101,7 @@ if (WINDOWS)
 		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/RenderBackends/Vulkan
 		
 		PRIVATE ${CMAKE_LIBRARY_PATH}/Direct3DHeaders/include/directx
+		PRIVATE ${VULKAN_INCLUDE_DIRS}
 	)
 
 	target_link_libraries(GUI PRIVATE
@@ -104,10 +112,11 @@ if (WINDOWS)
 		dxgi.lib
 
 		VulkanRHI
-		Vulkan::Vulkan
+
+		${Vulkan_LIBRARY}
 	)
 
-	target_compile_definitions(GUI PUBLIC
+	target_compile_definitions(GUI PRIVATE
 		VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 		VULKAN_HPP_STORAGE_SHARED
 		VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1

@@ -11,7 +11,34 @@ file(GLOB
 )
 
 if (WINDOWS)
-	find_package(Vulkan 1.4.300 COMPONENTS dxc REQUIRED)
+	set(VULKAN_LIBS_SEARCH_PATHS "${CMAKE_LIBRARY_PATH}/Vulkan/Bin"	"${CMAKE_LIBRARY_PATH}/Vulkan/Lib")
+	set(VULKAN_INCLUDE_DIRS "${CMAKE_LIBRARY_PATH}/Vulkan/Include")
+
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan-1 vulkan
+		PATHS 
+			${VULKAN_LIBS_SEARCH_PATHS}
+	)
+
+	find_library(Vulkan_dxc_LIBRARY
+		NAMES dxcompiler
+		PATHS
+			${VULKAN_LIBS_SEARCH_PATHS}
+	)
+
+	if (Vulkan_dxc_LIBRARY AND NOT TARGET dxc_lib)
+    add_library(dxc_lib STATIC IMPORTED)
+    set_property(TARGET dxc_lib
+      PROPERTY
+        INTERFACE_INCLUDE_DIRECTORIES "${VULKAN_INCLUDE_DIRS}")
+    set_property(TARGET dxc_lib APPEND
+      PROPERTY
+        IMPORTED_CONFIGURATIONS Release)
+    set_property(TARGET dxc_lib APPEND
+      PROPERTY
+        IMPORTED_LOCATION_RELEASE "${Vulkan_dxc_LIBRARY}")
+  endif()
+
 endif()
 
 if (WINDOWS)
@@ -48,6 +75,7 @@ target_include_directories(VulkanRHI
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/public
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/Windows
 	PRIVATE ${CMAKE_LIBRARY_PATH}/VulkanMemoryAllocator/include
+	PRIVATE ${VULKAN_INCLUDE_DIRS}
 )
 
 target_link_libraries(VulkanRHI PRIVATE
@@ -58,9 +86,8 @@ target_link_libraries(VulkanRHI PRIVATE
 
 if (WINDOWS)
 	target_link_libraries(VulkanRHI PRIVATE
-		Vulkan::Vulkan
-
-		Vulkan::dxc_lib
+		${Vulkan_LIBRARY}
+		dxc_lib
 	)
 	
 	target_compile_definitions(VulkanRHI PRIVATE
