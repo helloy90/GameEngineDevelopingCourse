@@ -81,7 +81,7 @@ namespace GameEngine
 			uint32_t m_CurrentSemaphoreIndex = 0;
 			uint32_t m_ImageIndex = 0;
 
-			bool initialized = false;
+			bool m_Initialized = false;
 		};
 	}
 }

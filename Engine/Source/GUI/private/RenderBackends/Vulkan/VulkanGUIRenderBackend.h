@@ -6,7 +6,8 @@
 
 struct ImDrawData;
 
-namespace vk {
+namespace vk
+{
 	class DescriptorPool;
 }
 

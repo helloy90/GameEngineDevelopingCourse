@@ -10,7 +10,6 @@ namespace GameEngine
 {
 	namespace Render::HAL
 	{
-
 		class VulkanRHITechnique final : public RHITechnique
 		{
 		public:

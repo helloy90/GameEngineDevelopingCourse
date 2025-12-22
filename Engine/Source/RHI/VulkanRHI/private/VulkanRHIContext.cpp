@@ -130,7 +130,7 @@ namespace GameEngine
 
 		VulkanRHIContext::VulkanRHIContext()
 		{
-			m_WorkCounter = std::make_unique<VulkanWorkCounter>(RenderCore::g_FrameBufferCount);
+			m_WorkCounter = std::make_unique<VulkanWorkCounter>();
 
 			m_Instance = new VulkanRHIFactory();
 			m_Device = new VulkanRHIDevice(m_Instance);
@@ -466,11 +466,13 @@ namespace GameEngine
 			return m_CommandBuffer;
 		}
 
-		vk::PhysicalDevice VulkanRHIContext::GetPhysicalDevice() const {
+		vk::PhysicalDevice VulkanRHIContext::GetPhysicalDevice() const 
+		{
 			return m_Device->GetPhysicalDevice();
 		}
 
-		uint32_t VulkanRHIContext::GetQueueIdx() const {
+		uint32_t VulkanRHIContext::GetQueueIdx() const 
+		{
 			return m_Device->GetUniversalQueueIdx();
 		}
 	}

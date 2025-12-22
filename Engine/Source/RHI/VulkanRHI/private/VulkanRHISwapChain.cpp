@@ -90,8 +90,8 @@ namespace GameEngine
 
 		void VulkanRHISwapChain::AcquireNext()
 		{
-
-			vk::AcquireNextImageInfoKHR info = {
+			vk::AcquireNextImageInfoKHR info = 
+			{
 				.swapchain = m_CurrentSwapChain.swapchain.get(),
 				.timeout = 1000000000,
 				.semaphore = GetImageAvailableSem(),
@@ -253,8 +253,8 @@ namespace GameEngine
 						.Dimension = RHITexture::Dimensions::Two,
 						// NOTE - circumventing check for initial VulkanRHIContext::Resize()
 						// as vulkan gives full window resolution images for swapchain
-						.Width = !initialized ? 1 : extent.width,
-						.Height = !initialized ? 1 : extent.height,
+						.Width = !m_Initialized ? 1 : extent.width,
+						.Height = !m_Initialized ? 1 : extent.height,
 						.MipLevels = 1,
 						.Format = ResourceFormat::BGRA8_UNORM,
 						.Flags = RHITexture::UsageFlags::RenderTarget
@@ -265,7 +265,7 @@ namespace GameEngine
 
 			m_CurrentSwapChain = std::move(newSwapChain);
 
-			initialized = true;
+			m_Initialized = true;
 		}
 
 		vk::Semaphore& VulkanRHISwapChain::GetImageAvailableSem()

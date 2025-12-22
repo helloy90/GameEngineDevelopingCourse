@@ -26,7 +26,8 @@ namespace GameEngine
 			return RenderNativeObject(&m_Pool.get());
 		}
 
-		vk::CommandPool VulkanRHICommandAllocator::GetCommandPool() const {
+		vk::CommandPool VulkanRHICommandAllocator::GetCommandPool() const
+		{
 			return m_Pool.get();
 		}
 	}

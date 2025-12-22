@@ -1,5 +1,7 @@
 #pragma once
 
+#include <RenderCore.h>
+
 namespace GameEngine
 {
 	namespace Render::HAL
@@ -10,11 +12,9 @@ namespace GameEngine
 			// NOTE - see VulkanRHISwapChain::Present() for reasons
 			friend class VulkanRHISwapChain;
 		public:
-			VulkanWorkCounter() = delete;
-
-			VulkanWorkCounter(std::size_t inflightFrames) 
+			VulkanWorkCounter() 
 				: m_CurrentIndex(0)
-				, m_InflightFrames(inflightFrames)
+				, m_InflightFrames(RenderCore::g_FrameBufferCount)
 			{
 			}
 
@@ -37,7 +37,6 @@ namespace GameEngine
 
 		private:
 			std::size_t m_CurrentIndex;
-			// NOTE - initialized with just RenderCore::g_FrameBufferCount for now
 			const std::size_t m_InflightFrames;
 		};
 	}

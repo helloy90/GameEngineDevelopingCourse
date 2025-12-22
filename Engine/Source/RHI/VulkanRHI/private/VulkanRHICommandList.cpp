@@ -26,7 +26,8 @@ namespace GameEngine
 		{
 			m_CommandAllocator = new VulkanRHICommandAllocator(device);
 
-			vk::CommandBufferAllocateInfo info = {
+			vk::CommandBufferAllocateInfo info = 
+			{
 				.commandPool = m_CommandAllocator->GetCommandPool(),
 				.level = vk::CommandBufferLevel::ePrimary,
 				.commandBufferCount = static_cast<uint32_t>(workCounter.MultiBufferingCount())
@@ -151,7 +152,7 @@ namespace GameEngine
 		void VulkanRHICommandList::Close()
 		{
 			// NOTE - one time check for Close() in RenderEngine constructor
-			if (!begun) 
+			if (!m_Begun) 
 			{
 				return;
 			}
@@ -170,7 +171,7 @@ namespace GameEngine
 
 			m_CurrentTechnique = nullptr;
 
-			begun = true;
+			m_Begun = true;
 		}
 
 		void VulkanRHICommandList::SetPipelineStateObject(RHIPipelineStateObject::Ptr pso)
@@ -307,7 +308,7 @@ namespace GameEngine
 
 		bool VulkanRHICommandList::HasBegun() const
 		{
-			return begun;
+			return m_Begun;
 		}
 	}
 }

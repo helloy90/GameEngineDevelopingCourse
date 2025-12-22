@@ -20,8 +20,8 @@ namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		class VulkanHLSLCompiler final {
-		
+		class VulkanHLSLCompiler final 
+		{
 		public:
 			VulkanHLSLCompiler();
 

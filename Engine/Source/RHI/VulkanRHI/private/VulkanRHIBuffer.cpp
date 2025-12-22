@@ -92,7 +92,8 @@ namespace GameEngine
 			return RenderNativeObject(&m_Buffer);
 		}
 
-		vk::Buffer VulkanRHIBuffer::GetBuffer() const {
+		vk::Buffer VulkanRHIBuffer::GetBuffer() const
+		{
 			return m_Buffer;
 		}
 	}

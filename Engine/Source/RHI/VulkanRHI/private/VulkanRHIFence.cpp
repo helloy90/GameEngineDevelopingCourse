@@ -30,7 +30,8 @@ namespace GameEngine
 			return RenderNativeObject(&m_Fences[m_WorkCounter.CurrentIndex()].get());
 		}
 
-		vk::Fence VulkanRHIFence::GetFence() const {
+		vk::Fence VulkanRHIFence::GetFence() const
+		{
 			return m_Fences[m_WorkCounter.CurrentIndex()].get();
 		}
 	}

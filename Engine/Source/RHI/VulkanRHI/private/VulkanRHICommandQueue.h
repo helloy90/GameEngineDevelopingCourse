@@ -17,7 +17,8 @@ namespace GameEngine
 
 		public:
 			// NOTE - set in SwapChain::MakeBackBufferPresentable, used here
-			struct SyncObjects {
+			struct SyncObjects 
+			{
 				vk::Semaphore available;
 
 				vk::Fence commandsComplete;

@@ -315,7 +315,8 @@ namespace GameEngine
 				mask = mask | vk::ColorComponentFlagBits::eA;
 			}
 
-			return vk::PipelineColorBlendAttachmentState{
+			return vk::PipelineColorBlendAttachmentState
+			{
 				.blendEnable = static_cast<vk::Bool32>(description.BlendEnable),
 				.srcColorBlendFactor = ConvertToVkBlendFactor(description.SrcBlend),
 				.dstColorBlendFactor = ConvertToVkBlendFactor(description.DestBlend),

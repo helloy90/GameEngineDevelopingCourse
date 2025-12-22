@@ -22,7 +22,8 @@ namespace GameEngine
 {
 	namespace Render::HAL
 	{
-    namespace VulkanUtil {
+    namespace VulkanUtil 
+    {
       inline std::wstring WidenString(const std::string& str)
       {
         std::vector<wchar_t> buffer(
@@ -34,7 +35,8 @@ namespace GameEngine
       }
     }
 
-		namespace VulkanAssert {
+		namespace VulkanAssert 
+    {
       // NOTE - using this to make release build asserts and catch errors more easily
 			[[noreturn]] inline void Panic(
 				const std::source_location& loc,

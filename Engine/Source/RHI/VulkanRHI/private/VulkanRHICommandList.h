@@ -88,7 +88,7 @@ namespace GameEngine
 			std::vector<vk::DescriptorBufferInfo> m_DescriptorInfos{};
 			std::vector<vk::WriteDescriptorSet> m_DescriptorWrites{};
 
-			bool begun = false;
+			bool m_Begun = false;
 		};
 	}
 }

@@ -15,7 +15,8 @@ namespace GameEngine
 			return RenderNativeObject(&m_Pipeline.get());
 		}
 
-		vk::Pipeline VulkanRHIPipelineStateObject::GetPipeline() const {
+		vk::Pipeline VulkanRHIPipelineStateObject::GetPipeline() const 
+		{
 			return m_Pipeline.get();
 		}
 	}

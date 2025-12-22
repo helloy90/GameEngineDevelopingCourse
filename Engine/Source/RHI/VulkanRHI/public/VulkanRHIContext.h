@@ -3,7 +3,8 @@
 #include <RHIContext.h>
 #include <RHI/VulkanRHI/export.h>
 
-namespace vk {
+namespace vk
+{
 	class PhysicalDevice;
 }
 

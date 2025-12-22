@@ -13,7 +13,8 @@ namespace GameEngine
 	{
 		class VulkanRHITechnique;
 
-		class VulkanDescriptorPool final : public RefCounter<RenderBackendResource> {
+		class VulkanDescriptorPool final : public RefCounter<RenderBackendResource> 
+		{
 		public:
 			using Ptr = RefCountPtr<VulkanDescriptorPool>;
 

@@ -13,16 +13,19 @@ namespace GameEngine
 			: m_Device(device->GetDevice())
 			, m_SubmitQueue(queue->GetQueue())
 			, m_Pool(
-				VulkanUtil::GetCheckedVkValue(device->GetDevice().createCommandPoolUnique(vk::CommandPoolCreateInfo{
-					.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-					.queueFamilyIndex = device->GetUniversalQueueIdx()
-				})) )
+				VulkanUtil::GetCheckedVkValue(device->GetDevice().createCommandPoolUnique(vk::CommandPoolCreateInfo
+					{
+						.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+						.queueFamilyIndex = device->GetUniversalQueueIdx()
+					})) )
 			, m_CommandBuffer(
 				std::move(VulkanUtil::GetCheckedVkValue(
-					device->GetDevice().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo{
-						.commandPool = m_Pool.get(),
-						.level = vk::CommandBufferLevel::ePrimary,
-						.commandBufferCount = 1})).front()) )
+					device->GetDevice().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo
+						{
+							.commandPool = m_Pool.get(),
+							.level = vk::CommandBufferLevel::ePrimary,
+							.commandBufferCount = 1
+						})).front()) )
 			, m_Finished(
 				VulkanUtil::GetCheckedVkValue(device->GetDevice().createFenceUnique(vk::FenceCreateInfo{})))
 		{
