@@ -56,7 +56,6 @@ namespace GameEngine
 #define VULKAN_RHI_PANIC(fmtStr, ...)																																								                     \
 	GameEngine::Render::HAL::VulkanAssert::Panic(std::source_location::current(), std::format(fmtStr, ##__VA_ARGS__))
 
-// NOTE - these macroses are used for checks that should happen even in release builds
 #define VULKAN_RHI_VERIFYF(expr, format_str, ...)																																		                     \
   do																																																								                     \
   {																																																									                     \

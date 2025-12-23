@@ -94,6 +94,7 @@ namespace GameEngine
 			}
 
 			VULKAN_RHI_PANIC("Could not find queue family with all requested flags!");
+			return ~uint32_t(0);
 		}
 
 		static vk::UniqueDevice CreateLogicalDevice(
