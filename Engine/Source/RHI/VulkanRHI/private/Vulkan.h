@@ -37,7 +37,7 @@ namespace GameEngine
 
 		namespace VulkanAssert 
     {
-			[[noreturn]] inline void Panic(
+			inline void Panic(
 				const std::source_location& loc,
 				std::string message)
 			{
