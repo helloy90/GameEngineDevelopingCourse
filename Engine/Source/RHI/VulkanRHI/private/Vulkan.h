@@ -37,24 +37,17 @@ namespace GameEngine
 
 		namespace VulkanAssert 
     {
-      // NOTE - using this to make release build asserts and catch errors more easily
 			[[noreturn]] inline void Panic(
 				const std::source_location& loc,
 				std::string message)
 			{
-				MessageBox(
-					NULL,
-					std::format(
-            L"Panicked at {} ({}:{}), `{}`: \n\t{}",
-            VulkanUtil::WidenString(loc.file_name()),
-            loc.line(),
-            loc.column(),
-            VulkanUtil::WidenString(loc.function_name()),
-            VulkanUtil::WidenString(message)).c_str(),
-					L"Vulkan error occured!",
-					MB_ICONERROR | MB_OK);
-
-				std::terminate();
+        assert(false && std::format(
+          L"Vulkan error occured! Panicked at {} ({}:{}), `{}`: \n\t{}",
+          VulkanUtil::WidenString(loc.file_name()),
+          loc.line(),
+          loc.column(),
+          VulkanUtil::WidenString(loc.function_name()),
+          VulkanUtil::WidenString(message)).c_str());
 			}
 		}
 	}
