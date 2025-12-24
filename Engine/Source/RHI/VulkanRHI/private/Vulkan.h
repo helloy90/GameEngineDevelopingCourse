@@ -37,31 +37,39 @@ namespace GameEngine
 
 		namespace VulkanAssert 
     {
-			inline void Panic(
+			[[noreturn]] inline void Panic(
 				const std::source_location& loc,
 				std::string message)
 			{
-        assert(false && std::format(
-          L"Vulkan error occured! Panicked at {} ({}:{}), `{}`: \n\t{}",
-          VulkanUtil::WidenString(loc.file_name()),
-          loc.line(),
-          loc.column(),
-          VulkanUtil::WidenString(loc.function_name()),
-          VulkanUtil::WidenString(message)).c_str());
+        MessageBox(
+          NULL,
+          std::format(
+            L"Panicked at {} ({}:{}), `{}`: \n\t{}",
+            VulkanUtil::WidenString(loc.file_name()),
+            loc.line(),
+            loc.column(),
+            VulkanUtil::WidenString(loc.function_name()),
+            VulkanUtil::WidenString(message)).c_str(),
+          L"Vulkan error occured!",
+          MB_ICONERROR | MB_OK);
+
+        std::terminate();
 			}
 		}
 	}
 }
 
+#if (DEBUG) || (_DEBUG)
+
 #define VULKAN_RHI_PANIC(fmtStr, ...)																																								                     \
 	GameEngine::Render::HAL::VulkanAssert::Panic(std::source_location::current(), std::format(fmtStr, ##__VA_ARGS__))
 
-#define VULKAN_RHI_VERIFYF(expr, format_str, ...)																																		                     \
+#define VULKAN_RHI_VERIFYF(expr, fmtStr, ...)																																		                     \
   do																																																								                     \
   {																																																									                     \
     if (!static_cast<bool>((expr)))																																									                     \
     {																																																								                     \
-      VULKAN_RHI_PANIC("assertion '{}' failed: {}", #expr, std::format(format_str, ##__VA_ARGS__));									                     \
+      VULKAN_RHI_PANIC("assertion '{}' failed: {}", #expr, std::format(fmtStr, ##__VA_ARGS__));									                     \
     }																																																								                     \
   } while (0)
 
@@ -73,6 +81,7 @@ namespace GameEngine
       VULKAN_RHI_PANIC("assertion '{}' failed.", #expr);																													                       \
     }																																																								                     \
   } while (0)
+
 // NOTE - circumventing [[nodiscard]] qualifier that some vulkan functions have
 #define VULKAN_RHI_CHECK_RESULT(expr)																																								                     \
   do																																																								                     \
@@ -81,3 +90,17 @@ namespace GameEngine
     VULKAN_RHI_VERIFYF(                                                                                                                  \
       _someAbsolutelyRandomNameForResult == vk::Result::eSuccess, "Vulkan error: {}", vk::to_string(_someAbsolutelyRandomNameForResult));\
   } while (0)
+
+#else
+
+#define VULKAN_RHI_PANIC(fmtStr, ...)
+#define VULKAN_RHI_VERIFYF(expr, fmtStr, ...)
+#define VULKAN_RHI_VERIFY(expr)
+
+// NOTE - circumventing [[nodiscard]] qualifier that some vulkan functions have
+#define VULKAN_RHI_CHECK_RESULT(expr)																																								                     \
+  do																																																								                     \
+  {																																																							                         \
+    vk::Result _someAbsolutelyRandomNameForResult = expr;                                                                                \
+  } while (0)
+#endif
