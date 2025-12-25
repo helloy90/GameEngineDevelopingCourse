@@ -33,8 +33,7 @@ namespace GameEngine
 
 		RenderNativeObject VulkanMemoryAllocator::GetNativeObject()
 		{
-			VULKAN_RHI_PANIC("Should not be called!");
-			return nullptr;
+			return RenderNativeObject(m_Allocator.get());
 		}
 
 		VmaAllocator VulkanMemoryAllocator::GetAllocator() const

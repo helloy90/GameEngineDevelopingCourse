@@ -54,7 +54,7 @@ namespace GameEngine
 		{
 			std::vector physDevices = VulkanUtil::GetCheckedVkValue(instance.enumeratePhysicalDevices());
 
-			VULKAN_RHI_VERIFYF(!physDevices.empty(), "No GPU on this PC supports Vulkan!");
+			ENGINE_ASSERTF(!physDevices.empty(), "No GPU on this PC supports Vulkan!");
 
 			vk::PhysicalDevice bestDevice = physDevices.front();
 			vk::PhysicalDeviceProperties bestDeviceProps = physDevices.front().getProperties();
@@ -93,7 +93,7 @@ namespace GameEngine
 				}
 			}
 
-			VULKAN_RHI_PANIC("Could not find queue family with all requested flags!");
+			ENGINE_PANIC("Could not find queue family with all requested flags!");
 			return ~uint32_t(0);
 		}
 

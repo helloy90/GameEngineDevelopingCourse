@@ -10,6 +10,8 @@ namespace GameEngine
 {
 	namespace Render::HAL
 	{
+		class VulkanRHIFence;
+
 		class VulkanRHICommandQueue final : public RHICommandQueue
 		{
 		public:
@@ -20,13 +22,12 @@ namespace GameEngine
 			struct SyncObjects 
 			{
 				vk::Semaphore available;
-
-				vk::Fence commandsComplete;
+				vk::Semaphore readyForPresent;
 			};
 
 		public:
 			VulkanRHICommandQueue() = delete;
-			VulkanRHICommandQueue(VulkanRHIDevice::Ptr device);
+			VulkanRHICommandQueue(VulkanRHIDevice::Ptr device, VulkanRHIFence* fence);
 			~VulkanRHICommandQueue() = default;
 
 		public:
@@ -40,6 +41,8 @@ namespace GameEngine
 		private:
 			// NOTE - using one queue for every operation (graphics, transfer, etc.)
 			vk::Queue m_UniversalQueue{};
+
+			VulkanRHIFence* m_Fence = nullptr;
 
 			SyncObjects m_SyncObjects;
 		};

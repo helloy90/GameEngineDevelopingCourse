@@ -38,7 +38,7 @@ namespace GameEngine
 
 		void VulkanOneShotCommandList::SubmitAndWait(vk::CommandBuffer buffer)
 		{
-			VULKAN_RHI_VERIFY(buffer == m_CommandBuffer.get());
+			ENGINE_ASSERT(buffer == m_CommandBuffer.get());
 
 			Core::array<vk::CommandBufferSubmitInfo, 1> commandBufferSubmitInfo = 
 			{

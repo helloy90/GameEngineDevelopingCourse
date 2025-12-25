@@ -22,7 +22,7 @@ namespace GameEngine
 
 		RenderNativeObject VulkanRHITechnique::GetNativeObject()
 		{
-			VULKAN_RHI_PANIC("No native object for Technique!");
+			ENGINE_PANIC("No native object for Technique!");
 			return nullptr;
 		}
 

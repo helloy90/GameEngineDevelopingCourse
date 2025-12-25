@@ -25,6 +25,7 @@ namespace GameEngine
 		class VulkanDescriptorPool;
 		class VulkanHLSLCompiler;
 		class VulkanMemoryAllocator;
+		class VulkanTransferHelper;
 		class VulkanOneShotCommandList;
 
 		class VULKAN_API VulkanRHIContext final : public RHIContext
@@ -64,7 +65,7 @@ namespace GameEngine
 			uint32_t GetQueueIdx() const;
 
 		private:
-			std::unique_ptr<VulkanWorkCounter> m_WorkCounter;
+			std::unique_ptr<VulkanWorkCounter> m_WorkCounter = nullptr;
 
 			RefCountPtr<VulkanRHIFactory> m_Instance = nullptr;
 			RefCountPtr<VulkanRHIDevice> m_Device = nullptr;
@@ -78,7 +79,7 @@ namespace GameEngine
 			RefCountPtr<VulkanRHICommandList> m_CommandBuffer = nullptr;
 
 			std::unique_ptr<VulkanHLSLCompiler> m_HLSLCompiler = nullptr;
-			
+			RefCountPtr<VulkanTransferHelper> m_TransferHelper = nullptr;
 			std::unique_ptr<VulkanOneShotCommandList> m_OneShotCommandList;
 		};
 	}

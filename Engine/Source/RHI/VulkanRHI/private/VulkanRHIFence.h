@@ -21,12 +21,19 @@ namespace GameEngine
 		public:
 			virtual void Sync(RHICommandQueue::Ptr commandQueue) override;
 
+			void SignalCurrentFence();
+
 			virtual RenderNativeObject GetNativeObject() override;
 			vk::Fence GetFence() const;
+			bool CurrentFenceSignaled() const;
 		private:
 			const VulkanWorkCounter& m_WorkCounter;
 
-			std::vector<vk::UniqueFence> m_Fences;
+			vk::Device m_Device{};
+
+			std::vector<vk::UniqueFence> m_Fences{};
+
+			std::vector<bool> m_FenceSignaled{};
 		};
 	}
 }

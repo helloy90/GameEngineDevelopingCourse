@@ -16,7 +16,7 @@ namespace GameEngine
 		{
 			std::vector<vk::SurfaceFormatKHR> formats = VulkanUtil::GetCheckedVkValue(physDevice.getSurfaceFormatsKHR(surface));
 
-			VULKAN_RHI_VERIFYF(!formats.empty(), "Device does not support any surface formats!");
+			ENGINE_ASSERTF(!formats.empty(), "Device does not support any surface formats!");
 
 			vk::SurfaceFormatKHR selected = formats[0];
 
@@ -41,7 +41,7 @@ namespace GameEngine
 		{
 			std::vector<vk::PresentModeKHR> modes = VulkanUtil::GetCheckedVkValue(physDevice.getSurfacePresentModesKHR(surface));
 
-			VULKAN_RHI_VERIFYF(!modes.empty(), "Device does not support any present modes!");
+			ENGINE_ASSERTF(!modes.empty(), "Device does not support any present modes!");
 
 			vk::PresentModeKHR selected = vk::PresentModeKHR::eFifo;
 
@@ -102,7 +102,7 @@ namespace GameEngine
 
 			if (res != vk::Result::eSuccess && res != vk::Result::eSuboptimalKHR)
 			{
-				VULKAN_RHI_PANIC("Failed to acquire swapchain element! Error code {}", vk::to_string(res));
+				ENGINE_PANICF("Failed to acquire swapchain element! Error code {}", vk::to_string(res));
 			}
 		}
 
@@ -125,24 +125,23 @@ namespace GameEngine
 			m_Queue->SetSyncObjects(
 				{
 					.available = GetImageAvailableSem(),
-					.commandsComplete = m_Fence->GetFence()
+					.readyForPresent = GetImageReadyForPresentSem()
 				});
 		}
 
 		void VulkanRHISwapChain::Present()
 		{
-			VULKAN_RHI_CHECK_RESULT(m_Device.waitForFences({ m_Fence->GetFence() }, vk::True, 1000000000));
-			VULKAN_RHI_CHECK_RESULT(m_Device.resetFences({ m_Fence->GetFence() }));;
-
 			vk::PresentInfoKHR presentInfo = 
 			{
+				.waitSemaphoreCount = 1,
+				.pWaitSemaphores = &GetImageReadyForPresentSem(),
 				.swapchainCount = 1,
 				.pSwapchains = &m_CurrentSwapChain.swapchain.get(),
 				.pImageIndices = &m_ImageIndex
 			};
 
 			vk::Result result = m_Queue->GetQueue().presentKHR(&presentInfo);
-			VULKAN_RHI_VERIFYF(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR,
+			ENGINE_ASSERTF(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR,
 				"Presentation queue submition failed! Error code {}", vk::to_string(result));
 
 			m_CurrentSemaphoreIndex = (m_CurrentSemaphoreIndex + 1) % m_CurrentSwapChain.imageAvailable.size();
@@ -150,6 +149,8 @@ namespace GameEngine
 			m_WorkCounter.Submit();
 
 			m_CurrentBackBufferIdx = m_WorkCounter.CurrentIndex();
+
+			AcquireNext();
 		}
 
 		RenderNativeObject VulkanRHISwapChain::GetNativeObject()
@@ -165,6 +166,8 @@ namespace GameEngine
 		void VulkanRHISwapChain::Resize([[maybe_unused]] RHIDevice::Ptr device, uint32_t width, uint32_t height)
 		{
 			recreateSwapChain(vk::Extent2D{.width = width, .height = height});
+
+			AcquireNext();
 		}
 
 		RHITexture::Ptr VulkanRHISwapChain::GetCurrentBackBuffer()
@@ -196,6 +199,13 @@ namespace GameEngine
 			for (std::size_t i = 0; i < newSwapChain.imageAvailable.size(); i++) 
 			{
 				newSwapChain.imageAvailable[i] =
+					VulkanUtil::GetCheckedVkValue(m_Device.createSemaphoreUnique(vk::SemaphoreCreateInfo{}));
+			}
+
+			newSwapChain.imageReadyForPresent.resize(imageCount);
+			for (std::size_t i = 0; i < newSwapChain.imageReadyForPresent.size(); i++)
+			{
+				newSwapChain.imageReadyForPresent[i] =
 					VulkanUtil::GetCheckedVkValue(m_Device.createSemaphoreUnique(vk::SemaphoreCreateInfo{}));
 			}
 
@@ -271,6 +281,11 @@ namespace GameEngine
 		vk::Semaphore& VulkanRHISwapChain::GetImageAvailableSem()
 		{
 			return m_CurrentSwapChain.imageAvailable[m_CurrentSemaphoreIndex].get();
+		}
+
+		vk::Semaphore& VulkanRHISwapChain::GetImageReadyForPresentSem()
+		{
+			return m_CurrentSwapChain.imageReadyForPresent[m_ImageIndex].get();
 		}
 	}
 }

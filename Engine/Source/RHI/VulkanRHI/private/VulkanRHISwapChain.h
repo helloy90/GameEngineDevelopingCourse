@@ -50,6 +50,7 @@ namespace GameEngine
 			void recreateSwapChain(vk::Extent2D resolution);
 
 			vk::Semaphore& GetImageAvailableSem();
+			vk::Semaphore& GetImageReadyForPresentSem();
 
 		private:
 			struct SwapChainData {
@@ -59,6 +60,7 @@ namespace GameEngine
 
 				std::vector<VulkanRHITexture::Ptr> elements;
 				std::vector<vk::UniqueSemaphore> imageAvailable;
+				std::vector<vk::UniqueSemaphore> imageReadyForPresent;
 			};
 
 		private:

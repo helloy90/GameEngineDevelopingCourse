@@ -13,7 +13,7 @@ namespace GameEngine
 			case vk::Format::eR32G32B32Sfloat:
 				return sizeof(float) * 3;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return 0;
 			}
 		}
@@ -35,7 +35,7 @@ namespace GameEngine
 			case ResourceFormat::BGRA8_UNORM:
 				return vk::Format::eB8G8R8A8Unorm;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::Format::eUndefined;
 			}
 		}
@@ -45,7 +45,7 @@ namespace GameEngine
 			switch (resourceFormat) 
 			{
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return ResourceFormat::UNKNOWN;
 			}
 		}
@@ -57,7 +57,7 @@ namespace GameEngine
 			case ResourceFormat::R16_UINT:
 				return vk::IndexType::eUint16;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::IndexType::eUint16;
 			}
 		}
@@ -71,7 +71,7 @@ namespace GameEngine
 			case RHITechnique::ShaderInfoDescription::ShaderType::PixelShader:
 				return "ps_5_0";
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return "undefined";
 			}
 		}
@@ -85,7 +85,7 @@ namespace GameEngine
 			case RHITechnique::ShaderInfoDescription::ShaderType::PixelShader:
 				return vk::ShaderStageFlagBits::eFragment;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::ShaderStageFlagBits(0);
 			}
 		}
@@ -99,14 +99,14 @@ namespace GameEngine
 			case RHITechnique::InputLayoutDescription::Classification::PerInstance:
 				return vk::VertexInputRate::eInstance;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::VertexInputRate::eVertex;
 			}
 		}
 
 		vk::VertexInputBindingDescription GetBindingDescriptions(const RHITechnique::InputLayout& inputLayout)
 		{
-			assert(!inputLayout.empty());
+			ENGINE_ASSERT(!inputLayout.empty());
 
 			// NOTE - assuming one vertex type
 			return vk::VertexInputBindingDescription
@@ -147,7 +147,7 @@ namespace GameEngine
 			case PrimitiveTopologyType::Triangle:
 				return vk::PrimitiveTopology::eTriangleList;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::PrimitiveTopology::eTriangleList;
 			}
 		}
@@ -202,7 +202,7 @@ namespace GameEngine
 			case ComparisonFunc::Always:
 				return vk::CompareOp::eAlways;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::CompareOp::eLess;
 			}
 		}
@@ -214,7 +214,7 @@ namespace GameEngine
 			case StencilOp::Keep:
 				return vk::StencilOp::eKeep;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::StencilOp::eKeep;
 			}
 		}
@@ -265,7 +265,7 @@ namespace GameEngine
 			case Blend::Zero:
 				return vk::BlendFactor::eZero;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::BlendFactor::eOne;
 			}
 		}
@@ -277,7 +277,7 @@ namespace GameEngine
 			case BlendOperation::Add:
 				return vk::BlendOp::eAdd;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::BlendOp::eAdd;
 			}
 		}
@@ -289,7 +289,7 @@ namespace GameEngine
 			case LogicOperation::Noop:
 				return vk::LogicOp::eNoOp;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::LogicOp::eNoOp;
 			}
 		}
@@ -339,7 +339,7 @@ namespace GameEngine
 			case RHITexture::Dimensions::Three:
 				return vk::ImageType::e3D;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::ImageType::e1D;
 			}
 		}
@@ -355,7 +355,7 @@ namespace GameEngine
 			case RHITexture::Dimensions::Three:
 				return vk::ImageViewType::e3D;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::ImageViewType::e1D;
 			}
 		}
@@ -426,7 +426,7 @@ namespace GameEngine
 			case RHIBuffer::UsageFlag::GpuReadOnly:
 				return vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst;
 			default:
-				ASSERT_NOT_IMPLEMENTED;
+				ENGINE_ASSERT_NOT_IMPLEMENTED;
 				return vk::BufferUsageFlagBits::eUniformBuffer;
 			}
 		}

@@ -68,7 +68,6 @@ namespace GameEngine
 			);
 
 			vk::CommandBuffer& GetCurrentBuffer();
-			bool HasBegun() const;
 
 		private:
 			const VulkanWorkCounter& m_WorkCounter;

@@ -18,7 +18,7 @@ namespace GameEngine
 			std::ofstream out("debug.txt", std::ios_base::ate | std::ios_base::out | std::ios_base::app);
 			if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eError)
 			{
-				VULKAN_RHI_PANIC("Vulkan error! \n{}\n", callbackData->pMessage);
+				//ENGINE_PANICF("Vulkan error! \n{}\n", callbackData->pMessage);
 				Core::Console::PrintDebug("Vulkan error! \n{}\n", callbackData->pMessage);
 			}
 			else if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)

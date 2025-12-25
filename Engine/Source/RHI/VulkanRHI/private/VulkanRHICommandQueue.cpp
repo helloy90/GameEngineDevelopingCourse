@@ -5,60 +5,63 @@
 #include <Vulkan.h>
 
 #include <VulkanRHICommandList.h>
+#include <VulkanRHIFence.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		VulkanRHICommandQueue::VulkanRHICommandQueue(VulkanRHIDevice::Ptr device)
+		VulkanRHICommandQueue::VulkanRHICommandQueue(VulkanRHIDevice::Ptr device, VulkanRHIFence* fence)
 			: m_UniversalQueue(device->GetDevice().getQueue(device->GetUniversalQueueIdx(), 0))
+			, m_Fence(fence)
 		{
 		}
 
 		void VulkanRHICommandQueue::ExecuteCommandLists(const std::vector<RHICommandList::Ptr>& cmdLists)
 		{
-			std::vector<vk::CommandBufferSubmitInfo> bufferSubmitInfos;
-			bufferSubmitInfos.reserve(cmdLists.size());
+			std::vector<vk::CommandBuffer> buffers;
+			buffers.reserve(cmdLists.size());
 
 			for (std::size_t i = 0; i < cmdLists.size(); i++) 
 			{
 				VulkanRHICommandList* commandbuffer = reinterpret_cast<VulkanRHICommandList*>(cmdLists[i].Get());
-				// NOTE - return, if command buffer has not begun 
-				// (there is no need to execute anything in vulkan at initialization)
-				if (!commandbuffer->HasBegun()) 
-				{
-					return;
-				}
-				bufferSubmitInfos.emplace_back(vk::CommandBufferSubmitInfo
-				{
-					.commandBuffer = commandbuffer->GetCurrentBuffer(),
-					.deviceMask = 0
-				});
+				buffers.emplace_back(commandbuffer->GetCurrentBuffer());
 			}
 
-			Core::array<vk::SemaphoreSubmitInfo, 1> wait = 
-			{ vk::SemaphoreSubmitInfo
+			vk::SubmitInfo submitInfo = {};
+			submitInfo.setCommandBuffers(buffers);
+
+			if (m_SyncObjects.available != VK_NULL_HANDLE)
+			{
+				Core::array<vk::PipelineStageFlags, 1> waitStages =
 				{
-					.semaphore = m_SyncObjects.available,
-					.stageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-					.deviceIndex = 0
-				}
-			};
+					vk::PipelineStageFlagBits::eColorAttachmentOutput
+				};
+				submitInfo.setWaitDstStageMask(waitStages);
 
-			vk::SubmitInfo2 submitInfo = {};
-			submitInfo.setCommandBufferInfos(bufferSubmitInfos);
-			submitInfo.setWaitSemaphoreInfos(wait);
+				Core::array<vk::Semaphore, 1> wait =
+				{ 
+						m_SyncObjects.available,
+				};
 
-			VULKAN_RHI_CHECK_RESULT(m_UniversalQueue.submit2({ submitInfo }, m_SyncObjects.commandsComplete));
+				submitInfo.setWaitSemaphores(wait);
+
+				Core::array<vk::Semaphore, 1> signal =
+				{
+						m_SyncObjects.readyForPresent,
+				};
+
+				submitInfo.setSignalSemaphores(signal);
+			}
+
+			VULKAN_RHI_CHECK_RESULT(m_UniversalQueue.submit({ submitInfo }, m_Fence->GetFence()));
+
+			m_Fence->SignalCurrentFence();
 		}
 
 		void VulkanRHICommandQueue::SetSyncObjects(SyncObjects objects)
 		{
-			m_SyncObjects = 
-			{
-				.available = objects.available,
-				.commandsComplete = objects.commandsComplete
-			};
+			m_SyncObjects = objects;
 		}
 
 		RenderNativeObject VulkanRHICommandQueue::GetNativeObject()

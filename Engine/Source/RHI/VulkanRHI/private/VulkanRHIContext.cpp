@@ -28,105 +28,14 @@
 #include <VulkanDescriptorPool.h>
 #include <VulkanHLSLCompiler.h>
 #include <VulkanMemoryAllocator.h>
+#include <VulkanTransferHelper.h>
 #include <VulkanOneShotCommandList.h>
 
 namespace GameEngine
 {
 	namespace Render::HAL
 	{
-		// NOTE - not constructing staging buffer through VulkanRHIBuffer 
-		// because of insufficient number of flags in RHIBuffer::Description
-		static void TransferDataToGPU(
-			VulkanRHIBuffer::Ptr buffer,
-			VmaAllocator allocator,
-			VulkanOneShotCommandList& oneShotCmdBuf,
-			const RHIBuffer::Description& description) 
-		{
-			vk::DeviceSize bufferSize = GetBufferSize(description);
-			VmaAllocation stagingBufferAllocation = nullptr;
-
-			assert((bufferSize % 4 == 0) && "GPU access must be aligned!");
-			assert(description.initData != nullptr);
-			VULKAN_RHI_VERIFY(stagingBufferAllocation == nullptr);
-
-			vk::BufferCreateInfo bufInfo = 
-			{
-				.size = bufferSize,
-				.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferSrc,
-				.sharingMode = vk::SharingMode::eExclusive
-			};
-
-			VmaAllocationCreateInfo allocInfo = 
-			{
-				.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-				.usage = VMA_MEMORY_USAGE_AUTO,
-				.requiredFlags = 0,
-				.preferredFlags = 0,
-				.memoryTypeBits = 0,
-				.pool = nullptr,
-				.pUserData = nullptr,
-				.priority = 0.0f
-			};
-
-			VkBuffer buf;
-
-			VkResult result = vmaCreateBuffer(
-				allocator,
-				&static_cast<const VkBufferCreateInfo&>(bufInfo),
-				&allocInfo,
-				&buf,
-				&stagingBufferAllocation,
-				nullptr);
-
-			VULKAN_RHI_VERIFYF(
-				result == VK_SUCCESS,
-				"Error {} occured while trying to allocate Staging Buffer",
-				vk::to_string(static_cast<vk::Result>(result)));
-
-			VULKAN_RHI_VERIFY(stagingBufferAllocation != nullptr);
-			vk::Buffer stagingBuffer = vk::Buffer(buf);
-
-			std::byte* mapped;
-
-			result = vmaMapMemory(allocator, stagingBufferAllocation, reinterpret_cast<void**>(&mapped));
-			VULKAN_RHI_VERIFYF(
-				result == VK_SUCCESS,
-				"Error {} occured while trying to map Staging Buffer memory",
-				vk::to_string(static_cast<vk::Result>(result)));
-
-			std::memcpy(mapped, description.initData, bufferSize);
-
-			vmaUnmapMemory(allocator, stagingBufferAllocation);
-
-			vk::CommandBuffer commandBuffer = oneShotCmdBuf.Start();
-
-			VULKAN_RHI_CHECK_RESULT(commandBuffer.begin(vk::CommandBufferBeginInfo{}));
-			{
-				vk::BufferCopy2 copy = 
-				{
-					.srcOffset = 0,
-					.dstOffset = 0,
-					.size = bufferSize
-				};
-
-				vk::CopyBufferInfo2 copyInfo = 
-				{
-					.srcBuffer = stagingBuffer,
-					.dstBuffer = buffer->GetBuffer(),
-					.regionCount = 1,
-					.pRegions = &copy
-				};
-
-				commandBuffer.copyBuffer2(copyInfo);
-			}
-			VULKAN_RHI_CHECK_RESULT(commandBuffer.end());
-
-			oneShotCmdBuf.SubmitAndWait(std::move(commandBuffer));
-
-			VULKAN_RHI_VERIFY(stagingBufferAllocation != nullptr);
-
-			vmaDestroyBuffer(allocator, VkBuffer(stagingBuffer), stagingBufferAllocation);
-		}
+		static vk::DeviceSize s_stagingBufferSize = 1 << 16; // 65536 bytes
 
 		VulkanRHIContext::VulkanRHIContext()
 		{
@@ -137,7 +46,7 @@ namespace GameEngine
 			m_MemoryAllocator = new VulkanMemoryAllocator(m_Instance, m_Device);
 
 			m_Fence = new VulkanRHIFence(*m_WorkCounter, m_Device);
-			m_CommandQueue = new VulkanRHICommandQueue(m_Device);
+			m_CommandQueue = new VulkanRHICommandQueue(m_Device, m_Fence.Get());
 			m_DescriptorPool = new VulkanDescriptorPool(*m_WorkCounter, m_Device);
 
 			m_SwapChain = new VulkanRHISwapChain(*m_WorkCounter, m_Instance, m_Device, m_CommandQueue, m_Fence);
@@ -145,6 +54,9 @@ namespace GameEngine
 			m_CommandBuffer = new VulkanRHICommandList(*m_WorkCounter, m_Device, *m_DescriptorPool, m_SwapChain.Get());
 
 			m_HLSLCompiler = std::make_unique<VulkanHLSLCompiler>();
+			m_TransferHelper = new VulkanTransferHelper(m_MemoryAllocator->GetAllocator(), s_stagingBufferSize);
+
+			m_CommandBuffer->Reset();
 
 			m_OneShotCommandList = std::make_unique<VulkanOneShotCommandList>(m_Device, m_CommandQueue);
 		}
@@ -163,7 +75,24 @@ namespace GameEngine
 
 			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
 			{
-				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+				vk::DeviceSize bufferSize = GetBufferSize(description);
+
+				ENGINE_ASSERTF(bufferSize < s_stagingBufferSize, "Staging buffer is to small for this buffer!");
+
+				vk::CommandBuffer cmdBuf = m_OneShotCommandList->Start();
+
+				VULKAN_RHI_CHECK_RESULT(cmdBuf.begin(vk::CommandBufferBeginInfo{}));
+				{
+					m_TransferHelper->UploadBuffer(
+						buffer,
+						cmdBuf,
+						bufferSize,
+						description.initData
+					);
+				}
+				VULKAN_RHI_CHECK_RESULT(cmdBuf.end());
+
+				m_OneShotCommandList->SubmitAndWait(cmdBuf);
 			}
 
 			return buffer;
@@ -178,7 +107,24 @@ namespace GameEngine
 
 			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
 			{
-				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+				vk::DeviceSize bufferSize = GetBufferSize(description);
+
+				ENGINE_ASSERTF(bufferSize < s_stagingBufferSize, "Staging buffer is to small for this buffer!");
+
+				vk::CommandBuffer cmdBuf = m_OneShotCommandList->Start();
+
+				VULKAN_RHI_CHECK_RESULT(cmdBuf.begin(vk::CommandBufferBeginInfo{}));
+				{
+					m_TransferHelper->UploadBuffer(
+						buffer,
+						cmdBuf,
+						bufferSize,
+						description.initData
+					);
+				}
+				VULKAN_RHI_CHECK_RESULT(cmdBuf.end());
+
+				m_OneShotCommandList->SubmitAndWait(cmdBuf);
 			}
 
 			return buffer;
@@ -199,10 +145,18 @@ namespace GameEngine
 			// (so destructor can handle freeing it)
 			VulkanRHIBuffer::Ptr buffer = new VulkanRHIBuffer(description, m_MemoryAllocator->GetAllocator());
 			
-			// NOTE - it is obviously bad to do it like this, one buffer at a time, but for now I think it's fine
 			if (description.UsageFlag == RHIBuffer::UsageFlag::GpuReadOnly) 
 			{
-				TransferDataToGPU(buffer, m_MemoryAllocator->GetAllocator(), *m_OneShotCommandList, description);
+				vk::DeviceSize bufferSize = GetBufferSize(description);
+
+				ENGINE_ASSERTF(bufferSize < s_stagingBufferSize, "Staging buffer is to small for this buffer!");
+
+				m_TransferHelper->UploadBuffer(
+					buffer,
+					m_CommandBuffer->GetCurrentBuffer(),
+					bufferSize,
+					description.initData
+				);
 			}
 
 			return buffer;
@@ -235,7 +189,7 @@ namespace GameEngine
 				}
 				else 
 				{
-					ASSERT_NOT_IMPLEMENTED;
+					ENGINE_ASSERT_NOT_IMPLEMENTED;
 				}
 			}
 
@@ -290,7 +244,7 @@ namespace GameEngine
 		RHIPipelineStateObject::Ptr VulkanRHIContext::CreatePSO(const RHIPipelineStateObject::Description& description)
 		{
 			// NOTE - checking because of hardcoded render target array size in description
-			VULKAN_RHI_VERIFY(description.NumRenderTargets <= 8);
+			ENGINE_ASSERT(description.NumRenderTargets <= 8);
 
 			VulkanRHITechnique* vkTechnique = reinterpret_cast<VulkanRHITechnique*>(description.Technique.Get());
 			const RHITechnique::InputLayout& generalLayout = vkTechnique->GetGeneralInputLayout();
@@ -407,8 +361,8 @@ namespace GameEngine
 			const RHIMesh::VertexBufferDescription& vertexDesc,
 			const RHIMesh::IndexBufferDescription& indexDesc)
 		{
-			assert(vertexDesc.initData);
-			assert(indexDesc.initData);
+			ENGINE_ASSERT(vertexDesc.initData);
+			ENGINE_ASSERT(indexDesc.initData);
 
 			RHIBuffer::Ptr vertexBuffer = CreateVertexBuffer(
 				{

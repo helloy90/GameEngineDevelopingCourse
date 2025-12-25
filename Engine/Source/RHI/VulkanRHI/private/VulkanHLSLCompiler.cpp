@@ -12,10 +12,10 @@ namespace GameEngine
 		{
 			HRESULT hres;
 			hres = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
-			assert(SUCCEEDED(hres));
+			ENGINE_ASSERT(SUCCEEDED(hres));
 
 			hres = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
-			assert(SUCCEEDED(hres));
+			ENGINE_ASSERT(SUCCEEDED(hres));
 		}
 
 		RefCountPtr<IDxcBlob> VulkanHLSLCompiler::CompileShader(
@@ -29,10 +29,10 @@ namespace GameEngine
 
 			HRESULT hres = utils->LoadFile(filename.c_str(), &codePage, &sourceBlob);
 
-			assert(SUCCEEDED(hres));
+			ENGINE_ASSERT(SUCCEEDED(hres));
 
-			std::wstring entrypointWStr = VulkanUtil::WidenString(entrypoint);
-			std::wstring targetWStr = VulkanUtil::WidenString(target);
+			std::wstring entrypointWStr = Core::WidenString(entrypoint);
+			std::wstring targetWStr = Core::WidenString(target);
 
 			std::vector<LPCWSTR> arguments = 
 			{
@@ -67,10 +67,10 @@ namespace GameEngine
 			{
 				RefCountPtr<IDxcBlobEncoding> errorBlob;
 				hres = result->GetErrorBuffer(&errorBlob);
-				assert(SUCCEEDED(hres));
+				ENGINE_ASSERT(SUCCEEDED(hres));
 				Core::Console::PrintDebug("Shader compilation failed: \n\n ", static_cast<const char*>(errorBlob->GetBufferPointer()));
 
-				assert(false && "Compilation failed");
+				ENGINE_PANIC("Compilation failed");
 			}
 
 			RefCountPtr<IDxcBlob> code;

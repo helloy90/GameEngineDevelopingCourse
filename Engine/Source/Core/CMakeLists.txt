@@ -89,6 +89,7 @@ target_link_libraries(Core PRIVATE
 
 target_precompile_headers(Core
 	PRIVATE
+		<source_location>
 		<unordered_map>
 		<vector>
 		<string>

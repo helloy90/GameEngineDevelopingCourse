@@ -56,7 +56,7 @@ namespace GameEngine
 				&m_Allocation,
 				nullptr);
 
-			VULKAN_RHI_VERIFYF(
+			ENGINE_ASSERTF(
 				result == VK_SUCCESS,
 				"Error {} occured while trying to allocate Buffer",
 				vk::to_string(static_cast<vk::Result>(result)));
@@ -71,12 +71,12 @@ namespace GameEngine
 
 		void VulkanRHIBuffer::CopyData(int elementIndex, void* data, uint32_t DataSize)
 		{
-			VULKAN_RHI_VERIFY(m_Description.UsageFlag != RHIBuffer::UsageFlag::GpuReadOnly);
+			ENGINE_ASSERT(m_Description.UsageFlag != RHIBuffer::UsageFlag::GpuReadOnly);
 
 			std::byte* mapped;
 
 			VkResult result = vmaMapMemory(m_Allocator, m_Allocation, reinterpret_cast<void**>(&mapped));
-			VULKAN_RHI_VERIFYF(
+			ENGINE_ASSERTF(
 				result == VK_SUCCESS,
 				"Error {} occured while trying to map Buffer memory!",
 				vk::to_string(static_cast<vk::Result>(result)));

@@ -38,7 +38,7 @@ namespace GameEngine
 
 		void VulkanRHICommandList::ClearRenderTarget(RHITexture::Ptr renderTarget, RenderCore::Color& color)
 		{
-			VULKAN_RHI_VERIFY(renderTarget != nullptr);
+			ENGINE_ASSERT(renderTarget != nullptr);
 			VulkanRHITexture* vkRenderTarget = reinterpret_cast<VulkanRHITexture*>(renderTarget.Get());
 
 			SetTextureState(
@@ -64,7 +64,7 @@ namespace GameEngine
 
 		void VulkanRHICommandList::ClearDepthStencilView(RHITexture::Ptr depthStencil, ClearFlags::Flag clearFlags, float depth, uint8_t stencil)
 		{
-			VULKAN_RHI_VERIFY(depthStencil != nullptr);
+			ENGINE_ASSERT(depthStencil != nullptr);
 			VulkanRHITexture* vkDepthStencil = reinterpret_cast<VulkanRHITexture*>(depthStencil.Get());
 			// NOTE - assuming depth is always there
 			vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
@@ -101,9 +101,9 @@ namespace GameEngine
 
 		void VulkanRHICommandList::SetRenderTargets(uint32_t TargetsNum, RHITexture::Ptr renderTarget, RHITexture::Ptr depthStencil)
 		{
-			VULKAN_RHI_VERIFY(renderTarget != nullptr);
-			VULKAN_RHI_VERIFY(depthStencil != nullptr);
-			VULKAN_RHI_VERIFY(TargetsNum == 1);
+			ENGINE_ASSERT(renderTarget != nullptr);
+			ENGINE_ASSERT(depthStencil != nullptr);
+			ENGINE_ASSERT(TargetsNum == 1);
 			// NOTE - textures unused as everything has been set in clear values functions
 			// This function will only be a signal to start rendering
 			vk::RenderingInfo renderingInfo = 
@@ -151,27 +151,17 @@ namespace GameEngine
 
 		void VulkanRHICommandList::Close()
 		{
-			// NOTE - one time check for Close() in RenderEngine constructor
-			if (!m_Begun) 
-			{
-				return;
-			}
-
 			VULKAN_RHI_CHECK_RESULT(GetCurrentBuffer().end());
 		}
 
 		void VulkanRHICommandList::Reset()
 		{
-			// NOTE - absolutely terrible, but I don't know any other way right now
-			// how to do it right in current RHI API
-			m_SwapChain->AcquireNext();
+			m_Begun = true;
 
 			VULKAN_RHI_CHECK_RESULT(GetCurrentBuffer().reset());
 			VULKAN_RHI_CHECK_RESULT(GetCurrentBuffer().begin(vk::CommandBufferBeginInfo{}));
 
 			m_CurrentTechnique = nullptr;
-
-			m_Begun = true;
 		}
 
 		void VulkanRHICommandList::SetPipelineStateObject(RHIPipelineStateObject::Ptr pso)
@@ -182,7 +172,7 @@ namespace GameEngine
 
 		void VulkanRHICommandList::SetMesh(RHIMesh::Ptr mesh)
 		{
-			VULKAN_RHI_VERIFY(mesh != nullptr);
+			ENGINE_ASSERT(mesh != nullptr);
 
 			VulkanRHIBuffer* vertexBuffer = reinterpret_cast<VulkanRHIBuffer*>(mesh->GetVertexBuffer().Get());
 			VulkanRHIBuffer* indexBuffer = reinterpret_cast<VulkanRHIBuffer*>(mesh->GetIndexBuffer().Get());
@@ -192,7 +182,7 @@ namespace GameEngine
 
 		void VulkanRHICommandList::SetGraphicsConstantBuffer(uint32_t ParameterIdx, RHIBuffer::Ptr buffer, uint32_t bufferOffset)
 		{
-			VULKAN_RHI_VERIFY(m_CurrentTechnique != nullptr);
+			ENGINE_ASSERT(m_CurrentTechnique != nullptr);
 			VulkanRHIBuffer* vkBuffer = reinterpret_cast<VulkanRHIBuffer*>(buffer.Get());
 
 			m_DescriptorInfos.emplace_back(vk::DescriptorBufferInfo
@@ -304,11 +294,6 @@ namespace GameEngine
 		vk::CommandBuffer& VulkanRHICommandList::GetCurrentBuffer()
 		{
 			return m_CommandBuffer[m_WorkCounter.CurrentIndex()].get();
-		}
-
-		bool VulkanRHICommandList::HasBegun() const
-		{
-			return m_Begun;
 		}
 	}
 }

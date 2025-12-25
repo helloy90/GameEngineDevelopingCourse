@@ -64,7 +64,7 @@ namespace GameEngine
 				&m_Allocation,
 				nullptr);
 
-			VULKAN_RHI_VERIFYF(
+			ENGINE_ASSERTF(
 				result == VK_SUCCESS,
 				"Error {} occured while trying to allocate Texture",
 				vk::to_string(static_cast<vk::Result>(result)));
@@ -95,7 +95,7 @@ namespace GameEngine
 			// almost all images have allocation, except swapchain images
 			if (m_Allocation != nullptr)
 			{
-				assert(m_Allocator != nullptr);
+				ENGINE_ASSERT(m_Allocator != nullptr);
 				vmaDestroyImage(m_Allocator, VkImage(m_Image), m_Allocation);
 			}
 		}

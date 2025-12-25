@@ -70,6 +70,7 @@ target_link_libraries(RHI PRIVATE
 
 target_precompile_headers(RHI
 	PRIVATE
+		<source_location>
 		<unordered_map>
 		<vector>
 		<string>

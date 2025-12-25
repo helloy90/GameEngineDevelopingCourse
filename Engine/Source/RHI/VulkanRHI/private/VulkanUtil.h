@@ -11,7 +11,7 @@ namespace GameEngine
 			template <class T>
 			T GetCheckedVkValue(vk::ResultValue<T>&& resultVal)
 			{
-				VULKAN_RHI_VERIFYF(
+				ENGINE_ASSERTF(
 					resultVal.result == vk::Result::eSuccess,
 					"Vulkan error: {}",
 					vk::to_string(resultVal.result));
