@@ -2,6 +2,7 @@
 #include <RHIContext.h>
 #include <RHIHelper.h>
 #include <D3D12GUIRenderBackend.h>
+#include <VulkanGUIRenderBackend.h>
 #include <PackedVariables.h>
 
 #include <imgui.h>
@@ -34,6 +35,9 @@ namespace GameEngine
 			case Render::HAL::RHIType::D3D12:
 				D3D12RenderBackend::Init(rhiContext);
 				break;
+			case Render::HAL::RHIType::Vulkan:
+				VulkanRenderBackend::Init(rhiContext);
+				break;
 			default:
 				assert(false && "Couldn't init the GUI");
 				break;
@@ -56,6 +60,9 @@ namespace GameEngine
 			case Render::HAL::RHIType::D3D12:
 				D3D12RenderBackend::NewFrame();
 				break;
+			case Render::HAL::RHIType::Vulkan:
+				VulkanRenderBackend::NewFrame();
+				break;
 			default:
 				assert(false && "Couldn't init the GUI");
 				break;
@@ -68,6 +75,9 @@ namespace GameEngine
 			{
 			case Render::HAL::RHIType::D3D12:
 				D3D12RenderBackend::Render(drawData);
+				break;
+			case Render::HAL::RHIType::Vulkan:
+				VulkanRenderBackend::Render(drawData);
 				break;
 			default:
 				assert(false && "Couldn't render GUI");

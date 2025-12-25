@@ -56,6 +56,10 @@ if (WINDOWS)
 	target_link_libraries(RHI PRIVATE
 		Direct3D12RHI
 	)
+
+	target_link_libraries(RHI PRIVATE
+		VulkanRHI
+	)
 endif()
 
 target_link_libraries(RHI PRIVATE
@@ -66,6 +70,7 @@ target_link_libraries(RHI PRIVATE
 
 target_precompile_headers(RHI
 	PRIVATE
+		<source_location>
 		<unordered_map>
 		<vector>
 		<string>

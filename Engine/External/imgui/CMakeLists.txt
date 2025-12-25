@@ -26,12 +26,16 @@ file(GLOB
 )
 
 if (WINDOWS)
+	find_package(Vulkan 1.4.300 REQUIRED)
+
 	file(GLOB
 		PLATFORM_FILES
 		src/backends/imgui_impl_win32.cpp
 		include/backends/imgui_impl_win32.h
 		src/backends/imgui_impl_dx12.cpp
 		include/backends/imgui_impl_dx12.h
+		src/backends/imgui_impl_vulkan.cpp
+		include/backends/imgui_impl_vulkan.h
 	)
 endif()
 
@@ -56,5 +60,14 @@ if (WINDOWS)
 		d3dcompiler.lib
 		D3D12.lib
 		dxgi.lib
+
+		Vulkan::Vulkan
+	)
+
+	target_compile_definitions(imgui PRIVATE
+	  VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+		VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+	  VULKAN_HPP_NO_EXCEPTIONS
+		IMGUI_IMPL_VULKAN_NO_PROTOTYPES
 	)
 endif()
